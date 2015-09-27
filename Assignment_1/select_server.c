@@ -22,24 +22,30 @@
 int main(int argc , char *argv[])
 {
     int opt = TRUE;
-    int master_socket , addrlen , new_socket , client_socket[30] , max_clients = 30 , activity, i , j , valread , sd;
+    int master_socket , addrlen , new_socket , client_socket[30] , max_clients = 30 , activity, i , j , valread , sd, sdd;
 	int max_sd;
     struct sockaddr_in address;
      
-    char buffer[1025];  //data buffer of 1K
-     
+    char buffer[2050];  //data buffer of 1K
+    char tempbuffer[2050];  //data buffer of 1K
+    char usernames[30][1025]; //list of names 
+    char exit_name[1025];
     //set of socket descriptors
     fd_set readfds;
      
     //a message
-    char *message = "ECHO Daemon v1.0 \r\n";
+    char *message = "Enter username to join chat room \r\n";
  
     //initialise all client_socket[] to 0 so not checked
     for (i = 0; i < max_clients; i++) 
     {
         client_socket[i] = 0;
     }
-     
+    //initialise all usernames[] to '0' so not checked
+     for (i = 0; i < max_clients; i++) 
+    {
+        strcpy(usernames[i],"0 \n");
+    } 
     //create a master socket
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
     {
@@ -128,7 +134,7 @@ int main(int argc , char *argv[])
                 perror("send");
             }
              
-            puts("Welcome message sent successfully");
+            puts("Chat room invitation sent successfully");
              
             //add new socket to array of sockets
             for (i = 0; i < max_clients; i++) 
@@ -148,34 +154,100 @@ int main(int argc , char *argv[])
         for (i = 0; i < max_clients; i++) 
         {
             sd = client_socket[i];
-             
+            
             if (FD_ISSET( sd , &readfds)) 
             {
+
                 //Check if it was for closing , and also read the incoming message
-                if ((valread = read( sd , buffer, 1024)) == 0)
+                if ((valread = read( sd , buffer, 2050)) == 0)
                 {
                     //Somebody disconnected , get his details and print
                     getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
-                    printf("Host disconnected , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-                     
-                    //Close the socket and mark as 0 in list for reuse
                     close( sd );
+                  
+                    printf("%d",i);
+                    puts("closing\n");
                     client_socket[i] = 0;
+                    strcpy(exit_name,usernames[i]);
+                    strcpy(usernames[i],"0 \n");
+                    printf("Host disconnected , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+                    strcat(exit_name," left \n");
+                     for (j = 0; j < max_clients; j++) 
+                        {
+                            if(j!=i){
+                                sdd = client_socket[j];
+                                send(sdd , exit_name , strlen(exit_name) , 0 );
+                            }                    
+                        } 
+                    //Close the socket and mark as 0 in list for reuse
+                    
+                    
+                    break;
+
+                    
                 }
-                 
+                
                 //Send message to other sockets if any
                 else
                 {
                     //set the string terminating NULL byte on the end of the data read
-                    buffer[valread] = '\0';
-                    for (j = 0; j < max_clients; j++) 
-                    {
-                        if(j!=i){
-                            sd = client_socket[j];
-                            send(sd , buffer , strlen(buffer) , 0 );
-                        }                    
+                    
+                    
+                    
+                     
+                   if(strcmp(usernames[i],"0 \n"))
+                   {
+                        
+                        printf("%d \n",i);
+                        puts("forwarding message");
+                        buffer[valread]='\0';
+                        printf("%s : %s \n",usernames[i], buffer); 
+                        for (j = 0; j < max_clients; j++) 
+                        {
+                            if(j!=i){
+                                sdd = client_socket[j];
+                                send(sdd , buffer , strlen(buffer) , 0 );
+                            }                    
+                        }
+                    }else{
+                        puts("user joining");
+                        printf("%lu",strlen(usernames[0]));
+                        buffer[valread]='\0';
+                        strcpy(usernames[i],buffer);
+                        printf("%s joined the chat room \n",buffer); 
+                        strcpy(tempbuffer,"List of users in chat room \n");
+                        send(sd , tempbuffer , strlen(tempbuffer) , 0 );
+
+                        for(j=0; j< max_clients; j++)
+                        {
+                            
+                            if(strcmp(usernames[j],"0 \n"))
+                            {
+                                strcpy(tempbuffer,usernames[j]);
+                                send(sd , tempbuffer , strlen(tempbuffer) , 0 );
+                                tempbuffer[0]='\0';
+                                
+                            }
+                            
+                        }
+                        for(j=0; j< max_clients; j++)
+                        {
+                            
+                            if(strcmp(usernames[j],"0 \n")&& j!=i )
+                            {
+                                sd=client_socket[j];
+                                strcpy(tempbuffer,usernames[i]);
+                                strcat(tempbuffer,"entered chat room \n");
+                                send(sd , tempbuffer , strlen(tempbuffer) , 0 );
+                                tempbuffer[0]='\0';
+                                
+                            }
+                            
+                        }
+
                     }
                 }
+ 
             }
         }
     }
