@@ -18,7 +18,7 @@
 #define TRUE   1
 #define FALSE  0
 #define PORT 8888
-
+int checkname(char usernames[30][1025], char username[1025]);
 int main(int argc , char *argv[])
 {
     int opt = TRUE;
@@ -210,6 +210,9 @@ int main(int argc , char *argv[])
                             }                    
                         }
                     }else{
+                        
+                        if(checkname(usernames,buffer)==TRUE){
+                        
                         puts("user joining");
                         printf("%lu",strlen(usernames[0]));
                         buffer[valread]='\0';
@@ -244,6 +247,11 @@ int main(int argc , char *argv[])
                             }
                             
                         }
+                        
+                        }else{
+                            strcpy(tempbuffer,"username already used \n");
+                            send(sd , tempbuffer , strlen(tempbuffer) , 0 ); 
+                        }
 
                     }
                 }
@@ -254,3 +262,14 @@ int main(int argc , char *argv[])
      
     return 0;
 } 
+
+int checkname(char usernames[30][1025],char username[1025]){
+    int i;
+    for(i=0; i<30 ; i++){
+        if(strcmp(usernames[i],username)==FALSE){
+            return FALSE;
+        }       
+    }   
+    return TRUE;
+}
+
