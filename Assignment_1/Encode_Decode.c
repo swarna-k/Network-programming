@@ -51,21 +51,17 @@ char* encode_msg(struct msg_header *msg_hdr, struct attr_header *attr_hdr, char 
 	char* tmp = msg;
 	
 	
-	//msg_header_hton(msg_hdr);
+	msg_header_hton(msg_hdr);
 	memcpy(msg, msg_hdr, sizeof(msg_header));
 	tmp = tmp + sizeof(msg_header);
-	//msg_header_ntoh(msg_hdr);
+	msg_header_ntoh(msg_hdr);
 	
-	//attr_header_hton(attr_hdr);
+	attr_header_hton(attr_hdr);
 	memcpy(tmp,attr_hdr, sizeof(attr_header));
 	tmp = tmp + sizeof(attr_header);
-	//attr_header_ntoh(attr_hdr);
+	attr_header_ntoh(attr_hdr);
 	
 	memcpy(tmp, payload, attr_hdr->length);
-	int i;
-	for(i = 0; i <16; i++){
-	printf("Pointer addy 1 value: %u \n" , *(msg+i));
-	}
 	
 	return msg;
 
@@ -85,8 +81,8 @@ void decode_msg(char *msg, msg_header *msg_hdr, attr_header *attr_hdr, char payl
 	
 
 	
-	//msg_header_ntoh(msg_hdr);
-	//attr_header_ntoh(attr_hdr);
+	msg_header_ntoh(msg_hdr);
+	attr_header_ntoh(attr_hdr);
 	
 	memcpy(payload,tmp,attr_hdr->length);
 	
