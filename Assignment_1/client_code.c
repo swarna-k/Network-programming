@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	struct hostent *servname;
 	struct msg_header mess_hdr;
 	struct attr_header atri_hdr;
-	char buff[1025];
+	char *buff;
 	fd_set readfiledesc;
 	char username_buff[16];
 	char message_buff[512];
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	printf("Username should be a maximum of 16 characters.\n");
 	bzero(username_buff, 16);
 	fgets(username_buff,16,stdin);
-	mess_hrd.vrsn=3;
+	mess_hdr.vrsn=3;
 	mess_hdr.type=2;
 	atri_hdr.type=2;
 	atri_hdr.length=(strlen(username_buff)+1);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 				{
 					//THIS IS FOR READING FROM KEYBOARD
 					fgets(message_buff, sizeof(message_buff), stdin);
-					mess_hrd.vrsn=3;
+					mess_hdr.vrsn=3;
 					mess_hdr.type=4;
 					atri_hdr.type=4;
 					atri_hdr.length=(strlen(message_buff)+1);
