@@ -8,7 +8,7 @@ typedef struct msg_header {
 
 typedef struct attr_header {
 	unsigned short type : 16;
-	unsigned short length : 16;
+	unsigned short length : 16; //length for attribute has to accomodate null terminating character. Set length as length +1
 }attr_header;
 
 void msg_header_hton(msg_header *msg_hdr);
