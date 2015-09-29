@@ -96,7 +96,7 @@ void decode_msg(char *msg, msg_header *msg_hdr, attr_header *attr_hdr, attr_head
 	
 	
 }
-
+/*
 int main (){
 	printf("Size of msg header is : %lu \n", sizeof(msg_header));
 	printf("Size of attr header is : %lu \n", sizeof(attr_header));
@@ -152,3 +152,4 @@ int main (){
 	printf("Buffer4: %s \n", buffer4);
 	
 }
+*/
