@@ -183,9 +183,13 @@ int main(int argc , char *argv[])
             
             if (FD_ISSET( sd , &readfds)) 
             {
-
+				puts("Before Read");
                 //Check if it was for closing , and also read the incoming message
-                if ((valread = read( sd , msg, 4)) == 0)
+
+				
+				
+                if ((valread = read( sd , msg, len)) == 0)
+
                 {
                     //Somebody disconnected , get his details and print
                     getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
@@ -233,11 +237,12 @@ int main(int argc , char *argv[])
                 //Send message to other sockets if any
                 else
                 {
-                    //set the string terminating NULL byte on the end of the data read
-                    
+                    //set the string terminating NULL byte on the end of the data 
+					
+                    puts("Made it to else");
                     
                     decode_msg(msg,&msg_hdr_recv,&attr_hdr_recv, NULL, &buffer, NULL);
-                     
+					puts("decoded msg");
                    if(msg_hdr_recv.type==4 && attr_hdr_recv.type==4)
                    {
                         //FORWARD

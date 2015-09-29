@@ -72,11 +72,14 @@ char* encode_msg(msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_h
 	
 }
 
-void decode_msg(char *msg, msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_hdr2, char payload[], char payload2[]){
+void decode_msg_header(char *msg, msg_header *msg_hdr){
+	memcpy(msg_hdr,msg,sizeof(msg_header));
+}
+
+
+void decode_msg(char *msg, int *msg_type, attr_header *attr_hdr, attr_header *attr_hdr2, char payload[], char payload2[]){
 	char* tmp = msg;
 
-	memcpy(msg_hdr,tmp,sizeof(msg_header));
-	tmp = tmp + sizeof(msg_header);
 	memcpy(attr_hdr,tmp,sizeof(attr_header));
 	tmp = tmp +sizeof(*attr_hdr);
 	
@@ -88,7 +91,7 @@ void decode_msg(char *msg, msg_header *msg_hdr, attr_header *attr_hdr, attr_head
 	
 	
 	
-	if (msg_hdr->type == 7 || msg_hdr->type == 3){
+	if (*msg_type == 7 || *msg_type == 3){
 		tmp = tmp + attr_hdr->length;
 		memcpy(attr_hdr2,tmp,sizeof(attr_header));
 		tmp = tmp +sizeof(attr_header);
