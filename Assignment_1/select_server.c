@@ -31,9 +31,10 @@ int main(int argc , char *argv[])
     char buffer[250];  //data buffer of 1K
     char buffer1[250];
     char buffer2[250];
+    char reason[32];
     char tempbuffer[250];  //data buffer of 1K
     char usernames[30][16]; //list of names 
-    char exit_name[1025];
+    char exit_name[16];
     char* msg;
     struct msg_header msg_hdr_send = {.vrsn = 3, .type = 3, .length = 4}; //Type is 3 or 7
     struct attr_header attr_hdr_send1 = {.type = 2, .length = 25};
@@ -182,14 +183,31 @@ int main(int argc , char *argv[])
                     strcpy(exit_name,usernames[i]);
                     strcpy(usernames[i],"0 \n");
                     printf("Host disconnected , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-                    /*strcat(exit_name," left \n");
+                    
+                    //OFFLINE
+
+                    /*strcat(exit_name," left \n");*/
                      for (j = 0; j < max_clients; j++) 
                         {
                             if(j!=i){
                                 sdd = client_socket[j];
-                                send(sdd , exit_name , strlen(exit_name) , 0 );
+                                strcpy(buffer1,exit_name); 
+                              //  strcpy(buffer2,buffer);
+                                msg_hdr_send.vrsn = 3; 
+                                msg_hdr_send.type = 6; 
+                                msg_hdr_send.length = 4; //Type is 3 or 7
+                                attr_hdr_send1.type = 2; 
+                                attr_hdr_send1.length = 25;
+                               // attr_hdr_send2.type = 4; 
+                               // attr_hdr_send2.length = 26;
+    
+    
+                                msg = encode_msg(&msg_hdr_send, &attr_hdr_send1, NULL, &buffer1, NULL);
+    
+                                send(sdd , msg , msg_hdr_send.length , 0 );
+                                free(msg);
                             }                    
-                        } */
+                        } 
                     //Close the socket and mark as 0 in list for reuse
                     
                     
@@ -244,6 +262,30 @@ int main(int argc , char *argv[])
                        
                         strcpy(usernames[i],buffer);
                         printf("%s joined the chat room \n",buffer); 
+
+                        //ONLINE
+
+                        for (j = 0; j < max_clients; j++) 
+                        {
+                            if(j!=i){
+                                sdd = client_socket[j];
+                                strcpy(buffer1,usernames[i]); 
+                              //  strcpy(buffer2,buffer);
+                                msg_hdr_send.vrsn = 3; 
+                                msg_hdr_send.type = 8; 
+                                msg_hdr_send.length = 4; //Type is 3 or 7
+                                attr_hdr_send1.type = 2; 
+                                attr_hdr_send1.length = 25;
+                               // attr_hdr_send2.type = 4; 
+                               // attr_hdr_send2.length = 26;
+    
+    
+                                msg = encode_msg(&msg_hdr_send, &attr_hdr_send1, NULL, &buffer1, NULL);
+    
+                                send(sdd , msg , msg_hdr_send.length , 0 );
+                                free(msg);
+                            }                    
+                        }
                         /*strcpy(tempbuffer,"List of users in chat room \n");
                         send(sd , tempbuffer , strlen(tempbuffer) , 0 );
 
@@ -275,8 +317,24 @@ int main(int argc , char *argv[])
                         }*/
                         
                         }else{
-                            strcpy(tempbuffer,"username already used \n");
-                            send(sd , tempbuffer , strlen(tempbuffer) , 0 ); 
+                                close( sd );
+                                /*
+                                //NAK
+                                strcpy(buffer1,"username already in use"); 
+                                //strcpy(buffer2,buffer);
+                                msg_hdr_send.vrsn = 3; 
+                                msg_hdr_send.type = 5; 
+                                msg_hdr_send.length = 4; //Type is 3 or 7
+                                attr_hdr_send1.type = 1; 
+                                attr_hdr_send1.length = 25;
+                                //attr_hdr_send2.type = 4; 
+                                //attr_hdr_send2.length = 26;
+    
+    
+                                msg = encode_msg(&msg_hdr_send, &attr_hdr_send1, NULL, &buffer1, NULL);
+                            //strcpy(tempbuffer,"username already used \n");
+                            
+                            send(sd , msg , msg_hdr_send.length , 0 ); */
                         }
 
                     }
