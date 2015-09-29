@@ -1,4 +1,5 @@
-
+#ifndef ENCODING_H
+#define ENCODING_H
 
 typedef struct msg_header {
 	unsigned short vrsn : 9 ; //9 bits
@@ -17,3 +18,6 @@ void attr_header_hton(attr_header *attr_hdr);
 void attr_header_ntoh(attr_header *attr_hdr);
 char* encode_msg(msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_hdr2, char payload[], char payload2[]); // 2 can be NULL
 void decode_msg(char *msg, msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_hdr2, char payload[], char payload2[]); //2 can be NULL
+
+
+#endif
