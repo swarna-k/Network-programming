@@ -24,6 +24,7 @@ int main(int argc , char *argv[])
 {
     int opt = TRUE;
     int master_socket , addrlen , new_socket , client_socket[30] , max_clients = 30 , activity, i , j , valread , sd, sdd;
+    int portno;
 	int max_sd;
     struct sockaddr_in address;
     struct msg_header msg_hdr_recv;
@@ -49,6 +50,12 @@ int main(int argc , char *argv[])
     char *message = "You are now connected \r\n";
  
     //initialise all client_socket[] to 0 so not checked
+    if (argc < 2)
+    {
+        fprintf(stderr,"ERROR, no port provided\n");
+        exit(1);
+    }
+
     for (i = 0; i < max_clients; i++) 
     {
         client_socket[i] = 0;
@@ -58,6 +65,8 @@ int main(int argc , char *argv[])
     {
         strcpy(usernames[i],"0 \n");
     } 
+    
+
     //create a master socket
     if( (master_socket = socket(AF_INET , SOCK_STREAM , 0)) == 0) 
     {
@@ -72,10 +81,15 @@ int main(int argc , char *argv[])
         exit(EXIT_FAILURE);
     }
  
+    bzero((char *) &address, sizeof(address));
+
+    portno = atoi(argv[2]);
+    printf("%s \n", argv[2]);
+
     //type of socket created
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( PORT );
+    address.sin_port = htons( portno );
      
     //bind the socket to localhost port 8888
     if (bind(master_socket, (struct sockaddr *)&address, sizeof(address))<0) 
@@ -83,7 +97,7 @@ int main(int argc , char *argv[])
         perror("bind failed");
         exit(EXIT_FAILURE);
     }
-	printf("Listener on port %d \n", PORT);
+	printf("Listener on port %d \n", portno);
 	
     //try to specify maximum of 3 pending connections for the master socket
     if (listen(master_socket, 3) < 0)
@@ -171,7 +185,7 @@ int main(int argc , char *argv[])
             {
 
                 //Check if it was for closing , and also read the incoming message
-                if ((valread = read( sd , msg, 2050)) == 0)
+                if ((valread = read( sd , msg, 4)) == 0)
                 {
                     //Somebody disconnected , get his details and print
                     getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
