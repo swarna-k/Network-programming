@@ -17,7 +17,8 @@ void msg_header_ntoh( msg_header *msg_hdr);
 void attr_header_hton(attr_header *attr_hdr);
 void attr_header_ntoh(attr_header *attr_hdr);
 char* encode_msg(msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_hdr2, char payload[], char payload2[]); // 2 can be NULL
-void decode_msg(char *msg, msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_hdr2, char payload[], char payload2[]); //2 can be NULL
+void decode_msg_header(char *msg, msg_header *msg_hdr);
+void decode_msg(char *msg, int *msg_type, attr_header *attr_hdr, attr_header *attr_hdr2, char payload[], char payload2[]); //msg minus header;
 
 
 #endif
