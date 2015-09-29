@@ -36,6 +36,8 @@ char* encode_msg(msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_h
 	else{
 		msg_length = sizeof(msg_header) + 2*sizeof(attr_header) + (size_t)(attr_hdr->length)+ (size_t)(attr_hdr2->length);	
 	}
+	
+	if(msg_length >1024) return NULL;
 
 	msg_hdr->length = msg_length;
 	printf("Mssage length: %d \n" , msg_length);
