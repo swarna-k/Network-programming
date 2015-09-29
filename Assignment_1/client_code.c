@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
 	struct hostent *servname;
 	struct msg_header mess_hdr;
 	struct attr_header atri_hdr;
+	struct attr_header atri_hdr2;
 	char *buff;
 	fd_set readfiledesc;
 	char username_buff[16];
@@ -65,10 +66,12 @@ int main(int argc, char *argv[])
 	mess_hdr.type=2;
 	atri_hdr.type=2;
 	atri_hdr.length=(strlen(username_buff)+1);
+	
 	buff = encode_msg(&mess_hdr, &atri_hdr, NULL, username_buff, NULL);
+	n = write(sockfd,buff,mess_hdr.length);
+	free(buff);
 	//SEND USERNAME AS JOIN FUNCTION
 	//n = write(sockfd,username_buff,strlen(username_buff));
-	n = write(sockfd,buff,mess_hdr.length);
 	if(n==-1)
 	{
 		perror("Error writing username to server\n");
@@ -99,10 +102,16 @@ int main(int argc, char *argv[])
 					atri_hdr.type=4;
 					atri_hdr.length=(strlen(message_buff)+1);
 					buff = encode_msg(&mess_hdr, &atri_hdr, NULL, message_buff, NULL);
+					if (buff != NULL){
+						n = write(sockfd,buff,mess_hdr.length);
+						free(buff);
+					}
+					else {
+						n=-1;
+					}
 	                //SEND MESSAGE TO SERVER
 	                //n = write(sockfd,message_buff,strlen(message_buff));
-	                n = write(sockfd,buff,mess_hdr.length);
-
+	                
 					if (n == -1) 
 					{
 						perror("Error sending the message");
@@ -119,10 +128,21 @@ int main(int argc, char *argv[])
 						perror("Error during receive");
 						exit(0);
 					}
-					decode_msg(buff, &mess_hdr, &atri_hdr, NULL, message_buff, NULL);
+					decode_msg(buff, &mess_hdr, &atri_hdr, &atri_hdr2, username_buff, message_buff);
 					if(mess_hdr.type==4)
 					{
+						printf("%s\n",username_buff);
 						printf("%s\n",message_buff);
+					}
+					
+					if(mess_hdr.type==8)
+					{
+						printf("%s is ONLINE!\n",username_buff);
+					}
+					
+					if(mess_hdr.type==6)
+					{
+						printf("%s is OFFLINE\n",username_buff);
 					}
 					//buff[n] = '\0';
 					//printf("%s\n",buff);
