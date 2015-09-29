@@ -14,27 +14,38 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
+#include "encoding.h"
  
 #define TRUE   1
 #define FALSE  0
 #define PORT 8888
-int checkname(char usernames[30][1025], char username[1025]);
+int checkname(char usernames[30][16], char username[16]);
 int main(int argc , char *argv[])
 {
     int opt = TRUE;
     int master_socket , addrlen , new_socket , client_socket[30] , max_clients = 30 , activity, i , j , valread , sd, sdd;
 	int max_sd;
     struct sockaddr_in address;
-     
-    char buffer[2050];  //data buffer of 1K
-    char tempbuffer[2050];  //data buffer of 1K
-    char usernames[30][1025]; //list of names 
+    struct msg_header msg_hdr_recv;
+    struct attr_header attr_hdr_recv; 
+    char buffer[250];  //data buffer of 1K
+    char buffer1[250];
+    char buffer2[250];
+    char tempbuffer[250];  //data buffer of 1K
+    char usernames[30][16]; //list of names 
     char exit_name[1025];
+    char* msg;
+    struct msg_header msg_hdr_send = {.vrsn = 3, .type = 3, .length = 4}; //Type is 3 or 7
+    struct attr_header attr_hdr_send1 = {.type = 2, .length = 25};
+    struct attr_header attr_hdr_send2 = {.type = 4, .length = 26};
+    //msg = encode_msg(&msg_hdr3, &attr_hdr3, &attr_hdr4, &buffer1, &buffer2);
+    //decode_msg(msg,&msg_hdr2,&attr_hdr2, NULL, &buffer, NULL);
+
     //set of socket descriptors
     fd_set readfds;
      
     //a message
-    char *message = "Enter username to join chat room \r\n";
+    char *message = "You are now connected \r\n";
  
     //initialise all client_socket[] to 0 so not checked
     for (i = 0; i < max_clients; i++) 
@@ -128,13 +139,13 @@ int main(int argc , char *argv[])
             //inform user of socket number - used in send and receive commands
             printf("New connection , socket fd is %d , ip is : %s , port : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
        
-            //send new connection greeting message
+            /*send new connection greeting message
             if( send(new_socket, message, strlen(message), 0) != strlen(message) ) 
             {
                 perror("send");
             }
              
-            puts("Chat room invitation sent successfully");
+            puts("Chat room invitation sent successfully");*/
              
             //add new socket to array of sockets
             for (i = 0; i < max_clients; i++) 
@@ -159,7 +170,7 @@ int main(int argc , char *argv[])
             {
 
                 //Check if it was for closing , and also read the incoming message
-                if ((valread = read( sd , buffer, 2050)) == 0)
+                if ((valread = read( sd , msg, 2050)) == 0)
                 {
                     //Somebody disconnected , get his details and print
                     getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
@@ -171,14 +182,14 @@ int main(int argc , char *argv[])
                     strcpy(exit_name,usernames[i]);
                     strcpy(usernames[i],"0 \n");
                     printf("Host disconnected , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-                    strcat(exit_name," left \n");
+                    /*strcat(exit_name," left \n");
                      for (j = 0; j < max_clients; j++) 
                         {
                             if(j!=i){
                                 sdd = client_socket[j];
                                 send(sdd , exit_name , strlen(exit_name) , 0 );
                             }                    
-                        } 
+                        } */
                     //Close the socket and mark as 0 in list for reuse
                     
                     
@@ -193,32 +204,47 @@ int main(int argc , char *argv[])
                     //set the string terminating NULL byte on the end of the data read
                     
                     
-                    
+                    decode_msg(msg,&msg_hdr_recv,&attr_hdr_recv, NULL, &buffer, NULL);
                      
-                   if(strcmp(usernames[i],"0 \n"))
+                   if(msg_hdr_recv.type==4 && attr_hdr_recv.type==4)
                    {
-                        
+                        //FORWARD
                         printf("%d \n",i);
                         puts("forwarding message");
-                        buffer[valread]='\0';
+                        
                         printf("%s : %s \n",usernames[i], buffer); 
                         for (j = 0; j < max_clients; j++) 
                         {
                             if(j!=i){
                                 sdd = client_socket[j];
-                                send(sdd , buffer , strlen(buffer) , 0 );
+                                strcpy(buffer1,usernames[i]); 
+                                strcpy(buffer2,buffer);
+                                msg_hdr_send.vrsn = 3; 
+                                msg_hdr_send.type = 3; 
+                                msg_hdr_send.length = 4; //Type is 3 or 7
+                                attr_hdr_send1.type = 2; 
+                                attr_hdr_send1.length = 25;
+                                attr_hdr_send2.type = 4; 
+                                attr_hdr_send2.length = 26;
+    
+    
+                                msg = encode_msg(&msg_hdr_send, &attr_hdr_send1, &attr_hdr_send2, &buffer1, &buffer2);
+    
+                                send(sdd , msg , msg_hdr_send.length , 0 );
+                                free(msg);
                             }                    
                         }
                     }else{
                         
+                        //JOIN
                         if(checkname(usernames,buffer)==TRUE){
                         
                         puts("user joining");
                         printf("%lu",strlen(usernames[0]));
-                        buffer[valread]='\0';
+                       
                         strcpy(usernames[i],buffer);
                         printf("%s joined the chat room \n",buffer); 
-                        strcpy(tempbuffer,"List of users in chat room \n");
+                        /*strcpy(tempbuffer,"List of users in chat room \n");
                         send(sd , tempbuffer , strlen(tempbuffer) , 0 );
 
                         for(j=0; j< max_clients; j++)
@@ -246,7 +272,7 @@ int main(int argc , char *argv[])
                                 
                             }
                             
-                        }
+                        }*/
                         
                         }else{
                             strcpy(tempbuffer,"username already used \n");
@@ -263,7 +289,7 @@ int main(int argc , char *argv[])
     return 0;
 } 
 
-int checkname(char usernames[30][1025],char username[1025]){
+int checkname(char usernames[30][16],char username[16]){
     int i;
     for(i=0; i<30 ; i++){
         if(strcmp(usernames[i],username)==FALSE){
