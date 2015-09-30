@@ -23,7 +23,7 @@ int checkname(char usernames[30][16], char username[16]);
 int main(int argc , char *argv[])
 {
     int opt = TRUE;
-    int master_socket , addrlen , new_socket , client_socket[30] , max_clients = 30 , activity, i , j , valread , sd, sdd;
+    int master_socket , addrlen , new_socket , client_socket[30] , max_clients , activity, i , j , valread , sd, sdd;
     int portno;
 	int max_sd;
     struct sockaddr_in address;
@@ -51,12 +51,12 @@ int main(int argc , char *argv[])
     char *message = "You are now connected \r\n";
  
     //initialise all client_socket[] to 0 so not checked
-    if (argc < 2)
+    if (argc < 4)
     {
-        fprintf(stderr,"ERROR, no port provided\n");
+        fprintf(stderr,"ERROR, type in address portnum max_clients\n");
         exit(1);
     }
-
+	max_clients = atoi(argv[3]);
     for (i = 0; i < max_clients; i++) 
     {
         client_socket[i] = 0;
@@ -85,11 +85,12 @@ int main(int argc , char *argv[])
     bzero((char *) &address, sizeof(address));
 
     portno = atoi(argv[2]);
-    printf("%s \n", argv[2]);
+    //printf("%s \n", argv[2]);
+	
 
     //type of socket created
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_addr.s_addr = inet_addr(argv[1]);
     address.sin_port = htons( portno );
      
     //bind the socket to localhost port 8888

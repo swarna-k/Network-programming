@@ -22,13 +22,13 @@ int main(int argc, char *argv[])
 	char message_buff[512];
 	FD_ZERO (&readfiledesc);
 
-	if(argc<3)
+	if(argc<4)
 	{
-		fprintf(stderr,"usage : client hostname portno\n" );
+		fprintf(stderr,"usage : client username hostname portno\n" );
 		exit(0);
 	}
 
-	portnum=atoi(argv[2]);
+	portnum=atoi(argv[3]);
 
 	sockfd = socket(AF_INET, SOCK_STREAM,0);
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	} 
 
-	servname=gethostbyname(argv[1]);
+	servname=gethostbyname(argv[2]);
 
 	if(servname==NULL)
 	{
@@ -59,10 +59,8 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	printf("Welcome to the chat room! Please enter your username!\n");
-	printf("Username should be a maximum of 16 characters.\n");
-	bzero(username_buff, 16);
-	fgets(username_buff,16,stdin);
+	bzero(username_buff,16);
+	strcpy(username_buff,argv[1]);
 	mess_hdr.vrsn=3;
 	mess_hdr.type=2;
 	atri_hdr.type=2;
