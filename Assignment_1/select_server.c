@@ -37,11 +37,13 @@ int main(int argc , char *argv[])
     char usernames[30][16]; //list of names 
     char exit_name[16];
     char* msg;
-    struct msg_header msg_hdr_send = {.vrsn = 3,, .length = 4}; //Type is 3 or 7
+
+	char recv_buffer[1024];
+    struct msg_header msg_hdr_send = {.vrsn = 3, .type = 4, .length = 4}; //Type is 3 or 7
+
     struct attr_header attr_hdr_send1 = {.type = 2, .length = 25};
     struct attr_header attr_hdr_send2 = {.type = 4, .length = 26};
-    //msg = encode_msg(&msg_hdr3, &attr_hdr3, &attr_hdr4, &buffer1, &buffer2);
-    //decode_msg(msg,&msg_hdr2,&attr_hdr2, NULL, &buffer, NULL);
+    
 
     //set of socket descriptors
     fd_set readfds;
@@ -52,10 +54,12 @@ int main(int argc , char *argv[])
     //initialise all client_socket[] to 0 so not checked
     if (argc < 4)
     {
-        fprintf(stderr,"ERROR, need port and maximum clients\n");
+
+        fprintf(stderr,"ERROR, type in address portnum max_clients\n");
         exit(1);
     }
-    max_clients=atoi(argv[3]);
+	max_clients = atoi(argv[3]);
+
     for (i = 0; i < max_clients; i++) 
     {
         client_socket[i] = 0;
@@ -74,7 +78,7 @@ int main(int argc , char *argv[])
         exit(EXIT_FAILURE);
     }
  
-    //set master socket to allow multiple connections , this is just a good habit, it will work without this
+    //set master socket to allow multiple connections 
     if( setsockopt(master_socket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0 )
     {
         perror("setsockopt");
@@ -84,8 +88,11 @@ int main(int argc , char *argv[])
     bzero((char *) &address, sizeof(address));
 
     portno = atoi(argv[2]);
-    printf("%s \n", argv[1]);
-    
+
+    //printf("%s \n", argv[2]);
+	
+
+
     //type of socket created
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = inet_addr(argv[1]);
@@ -99,7 +106,7 @@ int main(int argc , char *argv[])
     }
 	printf("Listener on port %d \n", portno);
 	
-    //try to specify maximum of 3 pending connections for the master socket
+    //specify maximum of 3 pending connections for the master socket
     if (listen(master_socket, 3) < 0)
     {
         perror("listen");
@@ -151,18 +158,10 @@ int main(int argc , char *argv[])
                 exit(EXIT_FAILURE);
             }
          
-            //inform user of socket number - used in send and receive commands
+            
             printf("New connection , socket fd is %d , ip is : %s , port : %d \n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
        
-            /*send new connection greeting message
-            if( send(new_socket, message, strlen(message), 0) != strlen(message) ) 
-            {
-                perror("send");
-            }
-             
-            puts("Chat room invitation sent successfully");*/
-             
-            //add new socket to array of sockets
+           
             for (i = 0; i < max_clients; i++) 
             {
                 //if position is empty
@@ -183,16 +182,15 @@ int main(int argc , char *argv[])
             
             if (FD_ISSET( sd , &readfds)) 
             {
-				puts("Before Read");
-                //Check if it was for closing , and also read the incoming message
+                //Check if it was for closing , and also read message header
 
 				
 				
                 
-                if ((valread = read( sd , msg, 4) )== 0)
+                if ((valread = read( sd , recv_buffer, 4) )== 0)
 
                 {
-                    //Somebody disconnected , get his details and print
+                    //Somebody disconnected , get his details and print , free all the resources
                     getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
                     close( sd );
                   
@@ -205,7 +203,7 @@ int main(int argc , char *argv[])
                     
                     //OFFLINE
 
-                    /*strcat(exit_name," left \n");*/
+                    //send offline meassage to all other clients
                      for (j = 0; j < max_clients; j++) 
                         {
                             if(j!=i){
@@ -235,16 +233,20 @@ int main(int argc , char *argv[])
                     
                 }
                 
-                //Send message to other sockets if any
+               
                 else
                 {
-                    //set the string terminating NULL byte on the end of the data 
-					decode_msg_header(msg,&msg_hdr_recv);
-                    valread = read( sd , msg, msg_hdr_recv.length-4);
-                    puts("Made it to else");
+                    //decode message
+					decode_msg_header(recv_buffer,&msg_hdr_recv);
+					bzero(recv_buffer,1024);
+					
+                    valread = read( sd , recv_buffer, msg_hdr_recv.length-4);
+
+					int type = (int)msg_hdr_recv.type;
+					
                     
-                    decode_msg(msg,msg_hdr_recv.type,&attr_hdr_recv, NULL, &buffer, NULL);
-					puts("decoded msg");
+                    decode_msg(recv_buffer,&type,&attr_hdr_recv, NULL, &buffer, NULL);
+					
                    if(msg_hdr_recv.type==4 && attr_hdr_recv.type==4)
                    {
                         //FORWARD
@@ -307,55 +309,12 @@ int main(int argc , char *argv[])
                                 free(msg);
                             }                    
                         }
-                        /*strcpy(tempbuffer,"List of users in chat room \n");
-                        send(sd , tempbuffer , strlen(tempbuffer) , 0 );
-
-                        for(j=0; j< max_clients; j++)
-                        {
-                            
-                            if(strcmp(usernames[j],"0 \n"))
-                            {
-                                strcpy(tempbuffer,usernames[j]);
-                                send(sd , tempbuffer , strlen(tempbuffer) , 0 );
-                                tempbuffer[0]='\0';
-                                
-                            }
-                            
-                        }
-                        for(j=0; j< max_clients; j++)
-                        {
-                            
-                            if(strcmp(usernames[j],"0 \n")&& j!=i )
-                            {
-                                sd=client_socket[j];
-                                strcpy(tempbuffer,usernames[i]);
-                                strcat(tempbuffer,"entered chat room \n");
-                                send(sd , tempbuffer , strlen(tempbuffer) , 0 );
-                                tempbuffer[0]='\0';
-                                
-                            }
-                            
-                        }*/
+                       
                         
                         }else{
+                                //if adding to chatroom failed, close the socket
                                 close( sd );
-                                /*
-                                //NAK
-                                strcpy(buffer1,"username already in use"); 
-                                //strcpy(buffer2,buffer);
-                                msg_hdr_send.vrsn = 3; 
-                                msg_hdr_send.type = 5; 
-                                msg_hdr_send.length = 4; //Type is 3 or 7
-                                attr_hdr_send1.type = 1; 
-                                attr_hdr_send1.length = 25;
-                                //attr_hdr_send2.type = 4; 
-                                //attr_hdr_send2.length = 26;
-    
-    
-                                msg = encode_msg(&msg_hdr_send, &attr_hdr_send1, NULL, &buffer1, NULL);
-                            //strcpy(tempbuffer,"username already used \n");
-                            
-                            send(sd , msg , msg_hdr_send.length , 0 ); */
+                               
                         }
 
                     }

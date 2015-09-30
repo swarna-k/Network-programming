@@ -16,18 +16,19 @@ int main(int argc, char *argv[])
 	struct attr_header atri_hdr;
 	struct attr_header atri_hdr2;
 	char *buff;
+	char recv_buff[1024];
 	fd_set readfiledesc;
 	char username_buff[16];
 	char message_buff[512];
 	FD_ZERO (&readfiledesc);
 
-	if(argc<3)
+	if(argc<4)
 	{
-		fprintf(stderr,"usage : client hostname portno\n" );
+		fprintf(stderr,"usage : client username hostname portno\n" );
 		exit(0);
 	}
 
-	portnum=atoi(argv[2]);
+	portnum=atoi(argv[3]);
 
 	sockfd = socket(AF_INET, SOCK_STREAM,0);
 
@@ -37,7 +38,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	} 
 
-	servname=gethostbyname(argv[1]);
+	servname=gethostbyname(argv[2]);
 
 	if(servname==NULL)
 	{
@@ -58,10 +59,8 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	printf("Welcome to the chat room! Please enter your username!\n");
-	printf("Username should be a maximum of 16 characters.\n");
-	bzero(username_buff, 16);
-	fgets(username_buff,16,stdin);
+	bzero(username_buff,16);
+	strcpy(username_buff,argv[1]);
 	mess_hdr.vrsn=3;
 	mess_hdr.type=2;
 	atri_hdr.type=2;
@@ -83,6 +82,7 @@ int main(int argc, char *argv[])
 
 	while(1)
 	{
+		
 		if (select(sockfd+1, &readfiledesc, NULL, NULL, NULL) == -1)
 		{
 			perror("Error in select function.");
@@ -121,17 +121,28 @@ int main(int argc, char *argv[])
 				
 				if (i == sockfd)
 				{
+					
 					//THIS IS FOR READING FROM THE SERVER
-					n = recv(sockfd, buff, 1024, 0);
+					n = recv(sockfd, recv_buff, 4, 0);
+				
 					if (n == -1) 
 					{
 						perror("Error during receive");
 						exit(0);
 					}
-					decode_msg(buff, &mess_hdr, &atri_hdr, &atri_hdr2, username_buff, message_buff);
-					if(mess_hdr.type==4)
+					
+					decode_msg_header(recv_buff,&mess_hdr);
+					
+					bzero(recv_buff, 1024);
+					
+					n = recv(sockfd, recv_buff,mess_hdr.length-4,0);
+					
+					int type = (int) mess_hdr.type;
+					decode_msg(recv_buff, &type, &atri_hdr, &atri_hdr2, username_buff, message_buff);
+				
+					if(mess_hdr.type==3)
 					{
-						printf("%s\n",username_buff);
+						printf("%s: ",username_buff);
 						printf("%s\n",message_buff);
 					}
 					
@@ -149,11 +160,12 @@ int main(int argc, char *argv[])
 
 
 				}
-				
+			
+				FD_SET(0, &readfiledesc);
+		        FD_SET(sockfd, &readfiledesc);	
 			}
 			
-			FD_SET(0, &readfiledesc);
-	        FD_SET(sockfd, &readfiledesc);
+			
 		}
 	}
 	close(sockfd);
