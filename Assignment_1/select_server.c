@@ -188,7 +188,8 @@ int main(int argc , char *argv[])
 
 				
 				
-                if ((valread = read( sd , msg, len)) == 0)
+                
+                if ((valread = read( sd , msg, 4) == 0)
 
                 {
                     //Somebody disconnected , get his details and print
@@ -238,10 +239,11 @@ int main(int argc , char *argv[])
                 else
                 {
                     //set the string terminating NULL byte on the end of the data 
-					
+					decode_msg_header(msg,msg_hdr_recv);
+                    valread = read( sd , msg, msg_hdr_recv.length-4);
                     puts("Made it to else");
                     
-                    decode_msg(msg,&msg_hdr_recv,&attr_hdr_recv, NULL, &buffer, NULL);
+                    decode_msg(msg,&msg_hdr_recv.type,&attr_hdr_recv, NULL, &buffer, NULL);
 					puts("decoded msg");
                    if(msg_hdr_recv.type==4 && attr_hdr_recv.type==4)
                    {
