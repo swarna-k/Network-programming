@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 				
 					if(mess_hdr.type==3)
 					{
-						printf("%s :",username_buff);
+						printf("%s: ",username_buff);
 						printf("%s\n",message_buff);
 					}
 					
