@@ -236,6 +236,7 @@ int main(int argc , char *argv[])
                
                 else
                 {
+                    printf("%d \n",strlen(recv_buffer));
                     //decode message
 					decode_msg_header(recv_buffer,&msg_hdr_recv);
 					bzero(recv_buffer,1024);

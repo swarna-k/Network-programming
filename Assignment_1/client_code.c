@@ -9,7 +9,7 @@
 #include "encoding.h"
 int main(int argc, char *argv[])
 {
-	int sockfd,portnum,n,i;
+	int sockfd,portnum,n,i,flag=0;
 	struct sockaddr_in serv_addr;
 	struct hostent *servname;
 	struct msg_header mess_hdr;
@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
 					if (buff != NULL){
 						n = write(sockfd,buff,mess_hdr.length);
 						free(buff);
+						message_buff[0]='\0';
 					}
 					else {
 						n=-1;
@@ -117,9 +118,10 @@ int main(int argc, char *argv[])
 						perror("Error sending the message");
 						exit(0);
 					}
+					flag=1;
 				}
 				
-				if (i == sockfd)
+				if ((i == sockfd)&&(flag==0))
 				{
 					
 					//THIS IS FOR READING FROM THE SERVER
@@ -167,6 +169,7 @@ int main(int argc, char *argv[])
 			
 			
 		}
+		flag=0;
 	}
 	close(sockfd);
 
