@@ -37,7 +37,8 @@ int main(int argc , char *argv[])
     char usernames[30][16]; //list of names 
     char exit_name[16];
     char* msg;
-    struct msg_header msg_hdr_send = {.vrsn = 3, .type = 3, .length = 4}; //Type is 3 or 7
+	char recv_buffer[1024];
+    struct msg_header msg_hdr_send = {.vrsn = 3, .type = 4, .length = 4}; //Type is 3 or 7
     struct attr_header attr_hdr_send1 = {.type = 2, .length = 25};
     struct attr_header attr_hdr_send2 = {.type = 4, .length = 26};
     //msg = encode_msg(&msg_hdr3, &attr_hdr3, &attr_hdr4, &buffer1, &buffer2);
@@ -189,9 +190,10 @@ int main(int argc , char *argv[])
 				
 				
                 
-                if ((valread = read( sd , msg, 4) )== 0)
+                if ((valread = read( sd , recv_buffer, 4) )== 0)
 
                 {
+					puts("after read fail");
                     //Somebody disconnected , get his details and print
                     getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
                     close( sd );
@@ -238,12 +240,24 @@ int main(int argc , char *argv[])
                 //Send message to other sockets if any
                 else
                 {
+					puts("After read success");
                     //set the string terminating NULL byte on the end of the data 
-					decode_msg_header(msg,&msg_hdr_recv);
-                    valread = read( sd , msg, msg_hdr_recv.length-4);
+					decode_msg_header(recv_buffer,&msg_hdr_recv);
+					puts("decoded message header");
+					bzero(recv_buffer,1024);
+					printf("Message header length = %d\n", msg_hdr_recv.length);
+					
+                    valread = read( sd , recv_buffer, msg_hdr_recv.length-4);
+					if (valread < 1){
+						puts("Read failed");
+					}
+					printf("Valread = %d\n", valread);
                     puts("Made it to else");
+					int type = (int)msg_hdr_recv.type;
+					
                     
-                    decode_msg(msg,msg_hdr_recv.type,&attr_hdr_recv, NULL, &buffer, NULL);
+                    decode_msg(recv_buffer,&type,&attr_hdr_recv, NULL, &buffer, NULL);
+					
 					puts("decoded msg");
                    if(msg_hdr_recv.type==4 && attr_hdr_recv.type==4)
                    {
@@ -260,7 +274,7 @@ int main(int argc , char *argv[])
                                 strcpy(buffer2,buffer);
                                 msg_hdr_send.vrsn = 3; 
                                 msg_hdr_send.type = 3; 
-                                msg_hdr_send.length = 4; //Type is 3 or 7
+                                msg_hdr_send.length = 4; 
                                 attr_hdr_send1.type = 2; 
                                 attr_hdr_send1.length = 25;
                                 attr_hdr_send2.type = 4; 
@@ -294,7 +308,7 @@ int main(int argc , char *argv[])
                               //  strcpy(buffer2,buffer);
                                 msg_hdr_send.vrsn = 3; 
                                 msg_hdr_send.type = 8; 
-                                msg_hdr_send.length = 4; //Type is 3 or 7
+                                msg_hdr_send.length = 4; 
                                 attr_hdr_send1.type = 2; 
                                 attr_hdr_send1.length = 25;
                                // attr_hdr_send2.type = 4; 

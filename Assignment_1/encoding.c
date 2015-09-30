@@ -40,7 +40,7 @@ char* encode_msg(msg_header *msg_hdr, attr_header *attr_hdr, attr_header *attr_h
 	if(msg_length >1024) return NULL;
 
 	msg_hdr->length = msg_length;
-	printf("Mssage length: %d \n" , msg_length);
+	//printf("Mssage length: %d \n" , msg_length);
 	
 	char* msg = (char*)malloc(msg_length);
 	
@@ -85,13 +85,10 @@ void decode_msg(char *msg, int *msg_type, attr_header *attr_hdr, attr_header *at
 	
 	//msg_header_ntoh(msg_hdr);
 	//attr_header_ntoh(attr_hdr);
-	
 	memcpy(payload,tmp,attr_hdr->length);
 	
 	
-	
-	
-	if (*msg_type == 7 || *msg_type == 3){
+	if (*msg_type == 3){
 		tmp = tmp + attr_hdr->length;
 		memcpy(attr_hdr2,tmp,sizeof(attr_header));
 		tmp = tmp +sizeof(attr_header);

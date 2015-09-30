@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 	struct attr_header atri_hdr;
 	struct attr_header atri_hdr2;
 	char *buff;
+	char recv_buff[1024];
 	fd_set readfiledesc;
 	char username_buff[16];
 	char message_buff[512];
@@ -83,6 +84,7 @@ int main(int argc, char *argv[])
 
 	while(1)
 	{
+		
 		if (select(sockfd+1, &readfiledesc, NULL, NULL, NULL) == -1)
 		{
 			perror("Error in select function.");
@@ -121,17 +123,28 @@ int main(int argc, char *argv[])
 				
 				if (i == sockfd)
 				{
+					
 					//THIS IS FOR READING FROM THE SERVER
-					n = recv(sockfd, buff, 1024, 0);
+					n = recv(sockfd, recv_buff, 4, 0);
+				
 					if (n == -1) 
 					{
 						perror("Error during receive");
 						exit(0);
 					}
-					decode_msg(buff, &mess_hdr, &atri_hdr, &atri_hdr2, username_buff, message_buff);
-					if(mess_hdr.type==4)
+					
+					decode_msg_header(recv_buff,&mess_hdr);
+					
+					bzero(recv_buff, 1024);
+					
+					n = recv(sockfd, recv_buff,mess_hdr.length-4,0);
+					
+					int type = (int) mess_hdr.type;
+					decode_msg(recv_buff, &type, &atri_hdr, &atri_hdr2, username_buff, message_buff);
+				
+					if(mess_hdr.type==3)
 					{
-						printf("%s\n",username_buff);
+						printf("%s :",username_buff);
 						printf("%s\n",message_buff);
 					}
 					
@@ -149,11 +162,12 @@ int main(int argc, char *argv[])
 
 
 				}
-				
+			
+				FD_SET(0, &readfiledesc);
+		        FD_SET(sockfd, &readfiledesc);	
 			}
 			
-			FD_SET(0, &readfiledesc);
-	        FD_SET(sockfd, &readfiledesc);
+			
 		}
 	}
 	close(sockfd);
