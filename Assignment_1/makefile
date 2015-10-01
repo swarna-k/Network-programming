@@ -12,7 +12,7 @@ encoding.o: encoding.c encoding.h
 server.o: team3_server.c encoding.h
 	$(CC) $(CFLAGS) -c team3_server.c -o server.o
   	 
-client.o: team3_client.c
+client.o: team3_client.c encoding.h
 	$(CC) $(CFLAGS) -c team3_client.c -o client.o
 	
 server: server.o encoding.o
