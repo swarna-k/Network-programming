@@ -16,8 +16,16 @@ Can be used to create just the client
 Can be used to compile only the server
 ##Code Description
  
-###Server
+###Server - Swarna K
 
+The server uses select() to maintain multiple users in the chat room.
+It maintains a list of client sockets and respective usernames
+It accepts incoming connection and waits for some activity on any socket
+It checks if its an I/O activity or if the connection is closed.
+When it receives a message from a user, it checks if its SEND and if so creates a copy of the message and forwards it as FWD
+If the message is JOIN, it adds the user to the chat room but before it adds, it checks if the username is already taken. If taken, it refuses the attempt and closes the connection
+When a user enters chat room. it sends out ONLINE message to all other clients and if a user leaves a chat room , it sends OFFLINE message.
+The messages are encoded and decoded using the defined functions in header file.
 
 ###Client - Aditya Sharma
 
