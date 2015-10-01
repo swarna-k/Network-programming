@@ -19,9 +19,17 @@ Can be used to compile only the server
 ###Server
 
 
-###Client
+###Client - Aditya Sharma
 
+USAGE
+1. Open terminal.
+2. Login to the server. Login format is <client username server_IP port_number>
+3. Username should be 16 characters long at most(including enter key).
+4. Once you have logged in, you will be able to send and receive messages.
+5. To disconnect from the chatroom terminate the connection(Ctrl+C).
 
+The client code takes in four arguments during connection. The format of the joining message to the chatroom is <client username server_IP port_number >. The code then creates a socket and connects to the server. Using this connection, a JOIN message is sent to the server which will then add the client to the chat room. Once the client is in the chatroom, we are 
+able to see whether there is any data to be read using the ISSET functionality of the select command. If there is data to be read from the keyboard, the data is read and packed and sent to the server. If there is data to be read from the server, the client reads it and displays it on the terminal.
 
 ###Encoding - Mandel Oats
 
