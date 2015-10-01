@@ -23,7 +23,7 @@ Can be used to compile only the server
 
 
 
-###Encoding
+###Encoding - Mandel Oats
 
 The Server and Client use external encoding and decoding functions and structs for processing messages as defined by the SBCP. 
 These functions were developed seperate of the Client and Server in order test the pointer arithmetic, 
