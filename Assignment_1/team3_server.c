@@ -314,7 +314,15 @@ int main(int argc , char *argv[])
                         
                         }else{
                                 //if adding to chatroom failed, close the socket
+                                getpeername(sd , (struct sockaddr*)&address , (socklen_t*)&addrlen);
                                 close( sd );
+                  
+                                printf("%d",i);
+                                puts("closing\n");
+                                client_socket[i] = 0;
+                                
+                                printf("User disconnected due to username error, ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+                    
                                
                         }
 
