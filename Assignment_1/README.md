@@ -1,6 +1,4 @@
-#Team 3 Assignment 1
-
-#SBCP Client and Server
+#Team 3 Assignment 1: SBCP Client and Server
 
 ##Compile and Run
 To compile simply navigate to the directory with the source files and type 
