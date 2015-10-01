@@ -199,7 +199,7 @@ int main(int argc , char *argv[])
                     client_socket[i] = 0;
                     strcpy(exit_name,usernames[i]);
                     strcpy(usernames[i],"0 \n");
-                    printf("Host disconnected , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+                    printf("User disconnected , ip %s , port %d \n" , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
                     
                     //OFFLINE
 
