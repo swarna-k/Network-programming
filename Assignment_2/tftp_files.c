@@ -5,66 +5,76 @@
 #include <stdlib.h>
 #include <sys/select.h>
 #include <unistd.h>
+#include "encoding.h"
 
-FILE *f1;
-int block_number=0;
-int endfile=0;
 
-char* get_file_data()
+//int block_number=0;
+
+void get_file_data(char* filename, Data_msg* data)//previous data struct
 {
-	long offset=(block_number*512);
-	int block_send=block_number+1;
+	FILE* f1 = fopen(filename,"r");
+	long offset = (data->block_number*512);
+	int block_send=data->block_number+1;
 	int opcode=1,num_bytes, worked=1;
 	char file_data_read[512];
 
-
-	//worked = lseek(f1,512,SEEK_SET);
-	//worked=fseek(f1, offset, SEEK_SET);
-
-	//if(worked!=0)
-	//{
-	//	perror("Error with fseek operation!");
-	//	exit(0);
-	//}
-	//else
-	//{
-		num_bytes=fread(file_data_read,1,512,f1);
-		if(num_bytes<0)
+	worked = fseek(f1, offset, SEEK_SET);
+		
+		if(worked!=0)
 		{
-			perror("Error with fread!");
-			exit(0);
+			perror("Error with fseek");
 		}
-		else if(num_bytes<512)
+		else 
 		{
-			printf("Last packet sent!");
-			//ENCODE Complete message
-			endfile=1;
-			block_number=0;
-		}
-		else
-		{
-			printf("Sending %d packet\n", &block_send);
-			//ENCODE Complete Message
-			block_number=block_number+1;
-		}
-	//}
+			num_bytes=fread(file_data_read,1,512,f1);
+			printf("Number of bytes = %d\n",num_bytes);
+			if(num_bytes==0)
+			{
+				perror("Error with fread!");
+				data->block_size = -1;
+				
+			}
+			else if(num_bytes<512)
+			{
+				printf("Last packet sent!");
+			
+				data->block_number = block_send;
+				data->block_size = num_bytes;
+				memcpy(&data->data,file_data_read,num_bytes);
+			
 
-	return file_data_read;
-
+			}
+			else
+			{
+				printf("Sending %d packet\n", block_send);
+			
+				data->block_number = block_send;
+				data->block_size = num_bytes;
+				memcpy(&data->data,file_data_read,num_bytes);
+			
+			}
+		}
+		fclose(f1);
 }
 
 int main()
 {
-	char file_name[]="datafile.txt";
-	char *op;
-	f1=fopen(file_name,"r");
-	while(endfile!=1)
-	{
-		op=get_file_data();
-		printf("%s\n", op);
-	}
 
-	endfile=0;
-	fclose(f1);
+	Data_msg prev_data={.opcode = 1, .block_number = 9, .block_size = 512};
+	char filename[255] = "datafile.txt";
+	
+	get_file_data(filename, &prev_data);
+	
+	printf("%s\n", prev_data.data);
+	
+	/*
+	while(prev_data.block_size >= 512)
+	{
+		get_file_data(&prev_data);
+		
+		printf("%s\n", prev_data.data);
+	}
+*/
+
 	return 0;
 }

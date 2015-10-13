@@ -12,7 +12,7 @@ typedef struct Data_msg {
 	unsigned short opcode;
 	unsigned short block_number;
 	int block_size;
-	char* data;
+	char data[512];
 }Data_msg;
 
 typedef struct ACK_msg {
@@ -26,14 +26,12 @@ typedef struct Error_msg {
 	char error_data[255];
 }Error_msg;
 
-int nullchar;
-int zerobyte;
+static const int nullchar = 1;
+static const int zerobyte = 1;
 
-nullchar = 1;
-zerobyte =1;
 
 size_t get_error_size(Error_msg *error);
-
+size_t get_data_size(Data_msg *data);
 char* decode_string(char* msg);
 unsigned short decode_opcode(char* msg);
 RRQ_msg decode_RRQ(char* msg);

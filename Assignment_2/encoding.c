@@ -16,17 +16,16 @@ RRQ_msg decode_RRQ(char* msg){
 	unsigned short opcode;
 	char filename[255];
 	char mode[255];
-	char tmp;
-	tmp = msg; 
+	char* tmp;
+	tmp = msg+sizeof(opcode); 
 	
 	opcode = 1;
 
-	strncpy(filename,tmp,255);
+	strncpy(filename,tmp,254);
 	filename[255] = '\0';
 	tmp = tmp + strlen(filename) + nullchar + zerobyte; //1 for null char 1 for 0
 	strncpy(mode,tmp, 255);
 	mode[255] = '\0';
-	
 	
 	RRQ.opcode = opcode;
 	strncpy(RRQ.filename,filename,255);
@@ -42,7 +41,7 @@ ACK_msg decode_ACK(char * msg){
 	unsigned short opcode;
 	unsigned short blocknumber;
 	opcode = 4;
-	memcpy(blocknumber,msg,sizeof(blocknumber));
+	memcpy(blocknumber,msg+sizeof(blocknumber),sizeof(blocknumber));
 	ACK.opcode = opcode;
 	ACK.block_number = blocknumber;
 	return ACK;
