@@ -100,70 +100,93 @@ int main(int argc, char *argv[])
 			n = recvfrom(sock, buf, sizeof(buf), 0, (struct sockaddr *) &cli_temp, &len);
 			puts("sending data");
 			printf("clients = %d\n", clients);
-			if (clients <= 10) {
-				client_num = check_client(&client_port[0],(int)ntohs(cli_temp.sin_port));
-				printf("Client_num = %d\n", client_num);
-				if(client_num==-1){
-					//printf("%d",clients);
-					cli_addr[clients] = cli_temp;
-					client_port[clients] = (int)ntohs(cli_temp.sin_port);
-					clients=clients+1;
-					opcode = decode_opcode(buf);
-					opcode = ntohs(opcode);
-					printf("Opcode = %d\n", opcode);
-					if(opcode == 1){
-						puts("Making RRQ");
-						RRQ_msg	rrq = decode_RRQ(buf);
-						puts("RRQ made");
-						strcpy(filenames[clients],rrq.filename);
-						//filenames[clients] = rrq.filename;
-						puts("Made datamsg");
-						Data_msg data = {.opcode = 3, .block_number = 0, .block_size = 512};
-						get_file_data(filenames[clients],&data);
+			
+			client_num = check_client(&client_port[0],(int)ntohs(cli_temp.sin_port));
+			printf("Client_num = %d\n", client_num);
+			int moveon = 0;
+				
+			if (client_num ==-1) {
+				
+				while(client_port[clients] != 0){
+					moveon++;
+					clients=(clients+1)%10;
+				}
+				
+				if(moveon == 10) continue; 
+
+				cli_addr[clients] = cli_temp;
+				client_port[clients] = (int)ntohs(cli_temp.sin_port);
+				i=clients;
+				clients=(clients+1)%10;
+				opcode = decode_opcode(buf);
+				opcode = ntohs(opcode);
+				printf("Opcode main = %d\n", opcode);
+				if(opcode == 1){
+					puts("Making RRQ");
+					RRQ_msg	rrq = decode_RRQ(buf);
+					puts("RRQ made");
+					strcpy(filenames[i],rrq.filename);
+					//filenames[clients] = rrq.filename;
+					puts("Made datamsg");
+					Data_msg data = {.opcode = 3, .block_number = 0, .block_size = 512};
+					get_file_data(filenames[i],&data);
+					char msg[get_data_size(&data)];
+					encode_Data(&data,msg);
+					int y;
+					for(y =0; y < 4; y++){
+						printf("Msg [%d] = %d\n", y, msg[y]);
+					}
+						
+					printf("Addresss = %hu , Port = %d \n",ntohs(cli_addr[i].sin_addr.s_addr),client_port[i]);
+					sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+					puts("Message Sent");
+						
+				}
+				else{
+					puts("SEND ERROR MSG");
+				}
+				puts("Client added\n");
+					
+				//sendto(sock, buf, strlen(buf), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+			}else{
+				puts("already a client\n");
+				i=client_num;
+				opcode = decode_opcode(buf);
+				opcode = ntohs(opcode);
+				printf("Opcode else = %d\n", opcode);
+				if(opcode == 4){
+					puts("Before Decode ACK");
+					printf("Buf size = %d\n",sizeof(buf));
+					ACK_msg ack = decode_ACK(buf);
+					printf("Ack(Opcode,blocknumber) = (%d,%d)\n", ack.opcode, ack.block_number );
+					puts("decoded ACK");
+					Data_msg data = {.opcode = 3, .block_number = ack.block_number, .block_size = 512};
+					get_file_data(filenames[i],&data);
+					puts("got file data");
+					printf("blocksize = %d\n", data.block_size);
+					if(data.block_size == -1){
+						bzero(filenames[i],255);
+						memset(&cli_addr[i],0,sizeof(cli_addr[i]));
+						client_port[i] = 0;
+					}
+					else
+					{
+						puts("made it to else else");
 						char msg[get_data_size(&data)];
 						encode_Data(&data,msg);
 						sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
-						puts("DOne");
-						
-					}
-					else{
-						puts("SEND ERROR MSG");
-					}
-					puts("Client added\n");
-					i=clients-1;
-					//sendto(sock, buf, strlen(buf), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
-				}else{
-					puts("already a client\n");
-					i=client_num;
-					opcode = decode_opcode(buf);
-					opcode = ntohs(opcode);
-					printf("Opcode = %d\n", opcode);
-					if(opcode == 4){
-						ACK_msg ack = decode_ACK(buf);
-						Data_msg data = {.opcode = 3, .block_number = ack.block_number, .block_size = 512};
-						get_file_data(filenames[i],&data);
-						if(data.block_size == -1){
-							strcpy(filenames[i],NULL);
-							memset(&cli_addr[i],0,sizeof(cli_addr[i]));
-							client_port[i] = 0;
-						}
-						else
-						{
-							char msg[get_data_size(&data)];
-							encode_Data(&data,msg);
-							sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
-						}
 					}
 				}
 			}
-
 		}
+
 	}
 }
 
+
 int check_client(int client_port[10],int cli_temp){
 	int i;
-	puts("ClientCheck");
+	//puts("ClientCheck");
   
 	for(i=0;i<10;i++){
 		// printf("%d\n",client_port[i] );
@@ -174,56 +197,56 @@ int check_client(int client_port[10],int cli_temp){
 
 	return -1;
 }
-void get_file_data(char* filename, Data_msg* data)//previous data struct
+void get_file_data(char* filename, Data_msg* data)
 {
 	
 	FILE* f1 = fopen(filename,"r");
 	long offset = (data->block_number*512);
 	int block_send=data->block_number+1;
-	int opcode=1,num_bytes, worked=1;
+	int num_bytes, worked=1;
 	char file_data_read[512];
 	
-	printf("Offset = %d\n",offset);
-	printf("Filename = %s\n", filename);
+	printf("Offset gfd = %d\n",offset);
+	printf("Filename gfd = %s\n", filename);
 
 	worked = fseek(f1, offset, SEEK_SET);
 		
 	
 	if(worked!=0)
+	{
+		perror("Error with fseek");
+	}
+	else
+	{
+		num_bytes=fread(file_data_read,1,512,f1);
+		printf("Number of bytes = %d\n",num_bytes);
+		if(num_bytes==0)
 		{
-			perror("Error with fseek");
+			perror("Error with fread!");
+			data->block_size = -1;
+				
+		}
+		else if(num_bytes<512)
+		{
+			printf("Last packet sent!");
+			
+			data->block_number = block_send;
+			data->block_size = num_bytes;
+			memcpy(&data->data,file_data_read,num_bytes);
+			
+
 		}
 		else
 		{
-			num_bytes=fread(file_data_read,1,512,f1);
-			printf("Number of bytes = %d\n",num_bytes);
-			if(num_bytes==0)
-			{
-				perror("Error with fread!");
-				data->block_size = -1;
-				
-			}
-			else if(num_bytes<512)
-			{
-				printf("Last packet sent!");
+			printf("Sending %d packet\n", block_send);
 			
-				data->block_number = block_send;
-				data->block_size = num_bytes;
-				memcpy(&data->data,file_data_read,num_bytes);
+			data->block_number = block_send;
+			data->block_size = num_bytes;
+			memcpy(&data->data,file_data_read,num_bytes);
 			
-
-			}
-			else
-			{
-				printf("Sending %d packet\n", block_send);
-			
-				data->block_number = block_send;
-				data->block_size = num_bytes;
-				memcpy(&data->data,file_data_read,num_bytes);
-			
-			}
 		}
+	}
 		
-		fclose(f1);
+	fclose(f1);
 		
 }

@@ -41,9 +41,9 @@ ACK_msg decode_ACK(char * msg){
 	unsigned short opcode;
 	unsigned short blocknumber;
 	opcode = 4;
-	memcpy(blocknumber,msg+sizeof(blocknumber),sizeof(blocknumber));
+	memcpy(&blocknumber,msg+sizeof(opcode),sizeof(blocknumber));
 	ACK.opcode = opcode;
-	ACK.block_number = blocknumber;
+	ACK.block_number = ntohs(blocknumber);
 	return ACK;
 	
 }
@@ -51,8 +51,11 @@ ACK_msg decode_ACK(char * msg){
 void encode_Data(Data_msg *data, char* msg){
 	char* itr;
 	itr = msg; 
+	data->opcode = htons(data->opcode);
+	data->block_number = htons(data->block_number);
 	memcpy(itr,&data->opcode,sizeof(data->opcode));
 	itr = itr + sizeof(data->opcode);
+	
 	memcpy(itr,&data->block_number,sizeof(data->block_number));
 	itr = itr + sizeof(data->block_number);
 	memcpy(itr,&data->data,data->block_size);
