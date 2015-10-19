@@ -7,7 +7,7 @@ Once it receives the RRQ, if it is error free, it accepts the request, adds the 
 
 Messages are encoded using encoding algorithm.
 
-The file to be transmitted is opened from the directory and blocks of data with size 512 bytes are read at a time. The fseek function positions the file pointer to the beginning of the block of data to be read depending on the block number. Once an ACK has been received for a block number, the file pointer is repositioned to the next block of data to be sent. The file is opened only when there is data to be read and immediately closed when the data has been transmitted. This allows for multiple users to read from their respective files at a given point of time. 
+The file to be transmitted is opened from the directory and blocks of data with size 512 bytes are read at a time. The fseek function positions the file pointer to the beginning of the block of data to be read depending on the block number. Once an ACK has been received for a block number, the file pointer is repositioned to the next block of data to be sent. The file is opened only when there is data to be read and immediately closed when the data has been transmitted. This allows for multiple users to read from their respective files without having to wait. 
 
 After every block sent, the server waits for an acknowledgement from the client before sending the next block to it. Once it receives the acknowledgement for the current block sent, it sends the next block.
 
