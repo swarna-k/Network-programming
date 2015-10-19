@@ -1,4 +1,4 @@
-Team 3 Assignment 2 TFTP Server
+#Team 3 Assignment 2 TFTP Server
 The server establishes a UDP server socket. It then waits for an RRQ. It uses select() to maintain concurrent connections.
 For every received message it checks if the client sending message is a new client or an existing client.
 Once it receives the RRQ, if it is error free, it accepts the request, adds the client details to the list of clients and starts sending the blocks of requested file. But, if the number of clients accessing server exceeds maximum (10 in our case), it makes the client wait till a slot is available for the client in the client list.
