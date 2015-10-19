@@ -112,33 +112,27 @@ int main(int argc, char *argv[])
 					clients=(clients+1)%10;
 				}
 				
-				if(moveon == 10) continue; 
+				if(moveon == 10) continue;  //If there are already 10 clients, ignore
 
 				cli_addr[clients] = cli_temp;
 				client_port[clients] = (int)ntohs(cli_temp.sin_port);
 				i=clients;
-				clients=(clients+1)%10;
-				opcode = decode_opcode(buf);
+				clients=(clients+1)%10; //max 10 clients
+				opcode = decode_opcode(buf);	
 				opcode = ntohs(opcode);
-				printf("Opcode main = %d\n", opcode);
-				if(opcode == 1){
+				
+				if(opcode == 1){ //If Read Request
 					puts("Making RRQ");
 					RRQ_msg	rrq = decode_RRQ(buf);
 					puts("RRQ made");
 					strcpy(filenames[i],rrq.filename);
 					//filenames[clients] = rrq.filename;
-					puts("Made datamsg");
+					puts("Made Data Msg");
 					Data_msg data = {.opcode = 3, .block_number = 0, .block_size = 512};
 					get_file_data(filenames[i],&data);
-					char msg[get_data_size(&data)];
-					encode_Data(&data,msg);
-					int y;
-					for(y =0; y < 4; y++){
-						printf("Msg [%d] = %d\n", y, msg[y]);
-					}
-						
-					printf("Addresss = %hu , Port = %d \n",ntohs(cli_addr[i].sin_addr.s_addr),client_port[i]);
-					sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+					char msg[get_data_size(&data)]; //Exact sized buffer
+					encode_Data(&data,msg);				
+					sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i])); //Sends first block of data back
 					puts("Message Sent");
 						
 				}
@@ -149,32 +143,23 @@ int main(int argc, char *argv[])
 					
 				//sendto(sock, buf, strlen(buf), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 			}else{
-				puts("already a client\n");
 				i=client_num;
 				opcode = decode_opcode(buf);
 				opcode = ntohs(opcode);
-				printf("Opcode else = %d\n", opcode);
-				if(opcode == 4){
-					puts("Before Decode ACK");
-					printf("Buf size = %d\n",sizeof(buf));
+				if(opcode == 4){ //If Ack
 					ACK_msg ack = decode_ACK(buf);
-					printf("Ack(Opcode,blocknumber) = (%d,%d)\n", ack.opcode, ack.block_number );
-					puts("decoded ACK");
-					Data_msg data = {.opcode = 3, .block_number = ack.block_number, .block_size = 512};
+					Data_msg data = {.opcode = 3, .block_number = ack.block_number, .block_size = 512}; //current block number
 					get_file_data(filenames[i],&data);
-					puts("got file data");
-					printf("blocksize = %d\n", data.block_size);
-					if(data.block_size == -1){
+					if(data.block_size == -1){ //If fread fails zero out arrays
 						bzero(filenames[i],255);
 						memset(&cli_addr[i],0,sizeof(cli_addr[i]));
 						client_port[i] = 0;
 					}
 					else
 					{
-						puts("made it to else else");
-						char msg[get_data_size(&data)];
+						char msg[get_data_size(&data)]; //if fread success
 						encode_Data(&data,msg);
-						sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+						sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i])); //send next block
 					}
 				}
 			}
@@ -202,12 +187,10 @@ void get_file_data(char* filename, Data_msg* data)
 	
 	FILE* f1 = fopen(filename,"r");
 	long offset = (data->block_number*512);
-	int block_send=data->block_number+1;
-	int num_bytes, worked=1;
+	int block_send=data->block_number+1; //next block number
+	int num_bytes, worked=1; // number of bytes, and fseek success flag
 	char file_data_read[512];
 	
-	printf("Offset gfd = %d\n",offset);
-	printf("Filename gfd = %s\n", filename);
 
 	worked = fseek(f1, offset, SEEK_SET);
 		
@@ -219,11 +202,10 @@ void get_file_data(char* filename, Data_msg* data)
 	else
 	{
 		num_bytes=fread(file_data_read,1,512,f1);
-		printf("Number of bytes = %d\n",num_bytes);
 		if(num_bytes==0)
 		{
 			perror("Error with fread!");
-			data->block_size = -1;
+			data->block_size = -1; //set blocksize to -1 if fread fails ( seek past end of file);
 				
 		}
 		else if(num_bytes<512)

@@ -2,12 +2,15 @@
 #define ENCODING_H
 #include <string.h>
 
+//Read request message
 typedef struct RRQ_msg {
 	unsigned short opcode;
 	char filename[255];
 	char mode[255];
 }RRQ_msg;
 
+
+//Data msg to send back
 typedef struct Data_msg {
 	unsigned short opcode;
 	unsigned short block_number;
@@ -15,19 +18,23 @@ typedef struct Data_msg {
 	char data[512];
 }Data_msg;
 
+//Recieved ACK
 typedef struct ACK_msg {
 	unsigned short opcode;
 	unsigned short block_number;
 }ACK_msg;
 
+//Error Msg to send
 typedef struct Error_msg {
 	unsigned short opcode;
 	unsigned short error_number;
 	char error_data[255];
 }Error_msg;
 
+//For Code readability 
 static const int nullchar = 1;
 static const int zerobyte = 1;
+
 
 
 size_t get_error_size(Error_msg *error);

@@ -5,13 +5,15 @@
 #include "encoding.h"
 #include <strings.h>
 
+
 unsigned short decode_opcode(char* msg){
 	unsigned short opcode;
 	memcpy(&opcode, msg, 2);
 	return opcode;
 }
 
-RRQ_msg decode_RRQ(char* msg){
+
+RRQ_msg decode_RRQ(char* msg){ 
 	RRQ_msg RRQ;
 	unsigned short opcode;
 	char filename[255];
@@ -23,7 +25,7 @@ RRQ_msg decode_RRQ(char* msg){
 
 	strncpy(filename,tmp,254);
 	filename[255] = '\0';
-	tmp = tmp + strlen(filename) + nullchar + zerobyte; //1 for null char 1 for 0
+	tmp = tmp + strlen(filename) + nullchar + zerobyte; //1 for null char 1 for 0 byte
 	strncpy(mode,tmp, 255);
 	mode[255] = '\0';
 	
