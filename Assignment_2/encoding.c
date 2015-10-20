@@ -80,18 +80,20 @@ void encode_Error(Error_msg *error, char* msg){
 	unsigned char zero = 0; 
 	char* itr;
 	itr = msg; 
+	unsigned short opcode;
+	unsigned short error_number;
 	
-	puts("Got to 1\n");
-	memcpy(itr,&(error->opcode),sizeof(error->opcode));
+	opcode = htons(error->opcode);
+	error_number = htons(error->error_number);
 	
-	itr = itr + sizeof(error->opcode);
-	puts("Got to 2\n");
-	memcpy(itr,&(error->error_number),sizeof(error->error_number));
-	itr = itr + sizeof(error->error_number);
+	memcpy(itr,&(opcode),sizeof(opcode));
+	itr = itr + sizeof(opcode);
+	memcpy(itr,&(error_number),sizeof(error_number));
+	itr = itr + sizeof(error_number);
 	memcpy(itr, &error->error_data, strlen(error->error_data)+nullchar);
 	itr = itr + strlen(error->error_data)+nullchar;
 	*itr = zero;
-	
+	puts("Finished Encoding");
 	
 }
 /*

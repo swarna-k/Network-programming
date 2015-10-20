@@ -39,6 +39,8 @@ int main(int argc, char *argv[])
 	char filenames[10][255];
 	socklen_t slen[10], slen_temp;
 	int i;
+	int FILE_DNE[10] = {0}; 
+	int ILL_OP[10] ={0}; 
 	int client_num;
 	fd_set  rset;
 	ssize_t n;
@@ -116,37 +118,67 @@ int main(int argc, char *argv[])
 
 				cli_addr[clients] = cli_temp;
 				client_port[clients] = (int)ntohs(cli_temp.sin_port);
+				puts("Client added\n");
 				i=clients;
 				clients=(clients+1)%10; //max 10 clients
 				opcode = decode_opcode(buf);	
 				opcode = ntohs(opcode);
-				
+				printf("Opcode = %d\n",opcode);
 				if(opcode == 1){ //If Read Request
 					puts("Making RRQ");
 					RRQ_msg	rrq = decode_RRQ(buf);
 					puts("RRQ made");
-					strcpy(filenames[i],rrq.filename);
-					//filenames[clients] = rrq.filename;
-					puts("Made Data Msg");
-					Data_msg data = {.opcode = 3, .block_number = 0, .block_size = 512};
-					get_file_data(filenames[i],&data);
-					char msg[get_data_size(&data)]; //Exact sized buffer
-					encode_Data(&data,msg);				
-					sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i])); //Sends first block of data back
-					puts("Message Sent");
+				 	
+					if( access( rrq.filename, F_OK ) == -1 ) {
+						FILE_DNE[i] = 1; 
+						puts("File Does Not exist");
+						Error_msg error = {.opcode = 5, .error_number = 1, .error_data = "File does not exist"};
+						puts("Made error msg");
+						char errormsg[get_error_size(&error)];
+						puts("made buffer");
+						encode_Error(&error, errormsg);
+						puts("passed encode");
+						int test = 0;
+						for(test =0; test<sizeof(errormsg);test++){
+							printf("ErrorMsg[%d] = %d\n",test,errormsg[test]);
+						}
+						sendto(sock,errormsg,sizeof(errormsg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
+					}
+					else{
+						strcpy(filenames[i],rrq.filename);
+						//filenames[clients] = rrq.filename;
+						puts("Made Data Msg");
+						Data_msg data = {.opcode = 3, .block_number = 0, .block_size = 512};
+						get_file_data(filenames[i],&data);
+						char msg[get_data_size(&data)]; //Exact sized buffer
+						encode_Data(&data,msg);				
+						sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i])); //Sends first block of data back
+						puts("Message Sent");
+					}
 						
 				}
 				else{
-					puts("SEND ERROR MSG");
+					ILL_OP[i] = 1; 
+					Error_msg error = {.opcode = 5, .error_number = 4, .error_data = "Illegal operation"};
+					puts("Made error msg");
+					char errormsg[get_error_size(&error)];
+					puts("made buffer");
+					encode_Error(&error, errormsg);
+					puts("passed encode");
+					int test = 0;
+					for(test =0; test<sizeof(errormsg);test++){
+						printf("ErrorMsg[%d] = %d\n",test,errormsg[test]);
+					}
+					sendto(sock,errormsg,sizeof(errormsg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 				}
-				puts("Client added\n");
+
 					
 				//sendto(sock, buf, strlen(buf), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i]));
 			}else{
 				i=client_num;
 				opcode = decode_opcode(buf);
 				opcode = ntohs(opcode);
-				if(opcode == 4){ //If Ack
+				if(opcode == 4 && FILE_DNE[i] == 0 && ILL_OP[i] == 0){ //If Ack
 					ACK_msg ack = decode_ACK(buf);
 					Data_msg data = {.opcode = 3, .block_number = ack.block_number, .block_size = 512}; //current block number
 					get_file_data(filenames[i],&data);
@@ -161,6 +193,13 @@ int main(int argc, char *argv[])
 						encode_Data(&data,msg);
 						sendto(sock,msg,sizeof(msg), 0, (struct sockaddr*)&cli_addr[i], sizeof(cli_addr[i])); //send next block
 					}
+				}
+				else if(FILE_DNE[i] == 1 || ILL_OP[i] ==1){
+					FILE_DNE[i] = 0; 
+					ILL_OP[i] = 0; 
+					bzero(filenames[i],255);
+					memset(&cli_addr[i],0,sizeof(cli_addr[i]));
+					client_port[i] = 0;
 				}
 			}
 		}
