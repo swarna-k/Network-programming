@@ -15,7 +15,7 @@
 #include <netinet/in.h>
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 #include <netdb.h>
-
+//#include "cache.h"
 
 #define TRUE   1
 #define FALSE  0
@@ -235,7 +235,7 @@ while(TRUE)
                     if(temp!=NULL)
                         temp=strtok(NULL,"^]");
                     
-                    
+                    printf("\npage = %s",temp);
 
                     
                     bzero((char*)&web_address[i],sizeof(web_address[i]));
@@ -256,9 +256,9 @@ while(TRUE)
     //send(newsockfd,buffer,strlen(buffer),0);
                     bzero((char*)send_buffer,sizeof(send_buffer));
                     if(temp!=NULL)
-                        sprintf(send_buffer,"GET /%s %s\r\nHost: %s\r\nConnection: close\r\n\r\n",temp,t3,t2);
+                        sprintf(send_buffer,"GET /%s %s\r\nHost: %s\r\nConnection: Keep-Alive\r\n\r\n",temp,t2,t3);
                     else
-                        sprintf(send_buffer,"GET / %s\r\nHost: %s\r\nConnection: close\r\n\r\n",t3,t2);
+                        sprintf(send_buffer,"GET / %s\r\nHost: %s\r\nConnection: Keep-Alive\r\n\r\n",t2,t3);
 
 
                     n=send(sockfd1,send_buffer,strlen(send_buffer),0);

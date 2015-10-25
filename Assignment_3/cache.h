@@ -5,7 +5,7 @@
 //Read request message
 
 
-typedef CacheNode  {
+typedef CacheNode{
 	char domainName[255];
 	char page[255];
 	char* body;
