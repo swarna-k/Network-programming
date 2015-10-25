@@ -17,7 +17,8 @@ typedef CacheNode{
 static CacheNode Cache[10];
 
 //Stores item in cache
-void cacheItem(char* Item);
+//Call after saving temporary file tempfile.txt
+void cacheItem();
 
 //Checks if item is in cache and not stale
 //Returns -1 if not in cache
