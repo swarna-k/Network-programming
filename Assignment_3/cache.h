@@ -8,7 +8,6 @@
 typedef CacheNode{
 	char domainName[255];
 	char page[255];
-	char* body;
 	int noExpiry;
 	time_t lastAccessed;
 	time_t lastModified;
@@ -26,8 +25,8 @@ void cacheItem(char* Item);
 int checkCache(char* domainName, char* page);
 
 
-//Populates Buffer with item at index in cache
-void getCachedItem(char* sendBuffer, size_t bufferSize, int index);
+//Populates Buffer with filename from index in Cache
+void getCachedItem(char* filename, int index);
 
 
 
