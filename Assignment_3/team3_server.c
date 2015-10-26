@@ -281,7 +281,7 @@ while(TRUE)
                         fclose(ftemp);
                         bzero((char*)send_buffer,500);
                        // sprintf(send_buffer,"end of file");
-                        cacheItem();
+                        cacheItem(t3,temp); //MO
                         //send(sd,send_buffer,strlen(send_buffer),0);
                     }
                 }
