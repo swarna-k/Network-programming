@@ -15,7 +15,7 @@
 #include <netinet/in.h>
 #include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO macros
 #include <netdb.h>
-//#include "cache.h"
+#include "cache.h"
 
 #define TRUE   1
 #define FALSE  0
@@ -30,7 +30,7 @@ int main(int argc , char *argv[])
         struct hostent* host;
         struct sockaddr_in address;
         struct sockaddr_in web_address[30];
-        char t1[300],t2[10],t3[300];
+        char t1[300],t2[10],t3[300],filename[30];
     char cache_buffer[250];  //data buffer of 1K
 
     char send_buffer[250];  //data buffer of 1K
@@ -183,7 +183,7 @@ while(TRUE)
              int port=0;
              int n;
              bzero((char*)recv_buffer,500);
-             
+             int index;
 
                 
                 if((valread=recv( sd , recv_buffer, 250, 0))!=0){
@@ -237,7 +237,8 @@ while(TRUE)
                     
                     printf("\npage = %s",temp);
 
-                    
+               if((index=checkCache(t3,temp))==-1){
+
                     bzero((char*)&web_address[i],sizeof(web_address[i]));
                     web_address[i].sin_port=htons(port);
                     web_address[i].sin_family=AF_INET;
@@ -250,7 +251,7 @@ while(TRUE)
                         perror("Error in connecting to remote server");
 
                     //sprintf(send_buffer,"path = %s   Port = %d",t3,port);
-                    send(sd,send_buffer,strlen(send_buffer),0);
+                    //send(sd,send_buffer,strlen(send_buffer),0);
                     
                     printf("\n%s\n",send_buffer);
     //send(newsockfd,buffer,strlen(buffer),0);
@@ -266,17 +267,37 @@ while(TRUE)
                     if(n<0)
                         perror("Error writing to socket");
                     else{
+                        FILE *ftemp;
+                        ftemp = fopen("tempfile.txt","w");
                         do
                         {
                             bzero((char*)send_buffer,500);
                             n=recv(sockfd1,send_buffer,500,0);
-                            if(!(n<=0))
+                            if(!(n<=0)){
+                                fwrite(send_buffer , 1 , sizeof(send_buffer) , ftemp );
                                 send(sd,send_buffer,n,0);
+                            }    
                         }while(n>0);
+                        fclose(ftemp);
                         bzero((char*)send_buffer,500);
-                        sprintf(send_buffer,"end of file");
-                        send(sd,send_buffer,strlen(send_buffer),0);
+                       // sprintf(send_buffer,"end of file");
+                        cacheItem();
+                        //send(sd,send_buffer,strlen(send_buffer),0);
                     }
+                }
+                else{
+                    
+                            FILE *fp;
+                            getCachedItem(filename,index);
+                            
+                            fp = fopen(filename,"r");
+                            while(fread(send_buffer,sizeof(send_buffer),1,fp))
+                                send(sd,send_buffer,sizeof(send_buffer),0);
+
+                            bzero((char*)send_buffer,500);
+                            fclose(fp);  
+
+                }    
                     close(sockfd1);
                 }
                 else
