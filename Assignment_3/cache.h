@@ -8,17 +8,17 @@
 typedef struct CacheNode{
 	char domainName[255];
 	char page[255];
-	int noExpiry;
+	int expire_flag;
 	time_t lastAccessed;
 	time_t lastModified;
 	time_t expires;
 }CacheNode;
 
-static CacheNode Cache[10];
+extern CacheNode Cache[10];
 
 //Stores item in cache
 //Call after saving temporary file tempfile.txt
-void cacheItem();
+void cacheItem(char* domainName, char* page);
 
 //Checks if item is in cache and not stale
 //Returns -1 if not in cache
@@ -31,6 +31,9 @@ void getCachedItem(char* filename, int index);
 
 
 
+int itemToEvict();
+
+void evictItem(int cacheIndex, CacheNode* newNode);
 
 
 #endif
