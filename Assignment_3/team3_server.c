@@ -47,10 +47,10 @@ int main(int argc , char *argv[])
     char *message = "You are now connected \r\n";
 
     //initialise all client_socket[] to 0 so not checked
-    if (argc < 2)
+    if (argc < 3)
     {
 
-        fprintf(stderr,"ERROR, type in port no.\n");
+        fprintf(stderr,"ERROR, type in address port no.\n");
         exit(1);
     }
 	//max_clients = atoi(argv[3]);
@@ -182,11 +182,11 @@ while(TRUE)
              int flag=0;
              int port=0;
              int n;
-             bzero((char*)recv_buffer,500);
+             bzero((char*)recv_buffer,sizeof(recv_buffer));
              int index;
 
                 
-                if((valread=recv( sd , recv_buffer, 250, 0))!=0){
+                if((valread=recv( sd , recv_buffer, sizeof(recv_buffer), 0))!=0){
 
                 //puts("got data");
                 sscanf(recv_buffer,"%s %s %s",t1,t2,t3);
@@ -271,15 +271,15 @@ while(TRUE)
                         ftemp = fopen("tempfile.txt","w");
                         do
                         {
-                            bzero((char*)send_buffer,500);
-                            n=recv(sockfd1,send_buffer,500,0);
+                            bzero((char*)send_buffer,sizeof(send_buffer));
+                            n=recv(sockfd1,send_buffer,sizeof(send_buffer),0);
                             if(!(n<=0)){
                                 fwrite(send_buffer , 1 , sizeof(send_buffer) , ftemp );
                                 send(sd,send_buffer,n,0);
                             }    
                         }while(n>0);
                         fclose(ftemp);
-                        bzero((char*)send_buffer,500);
+                        bzero((char*)send_buffer,sizeof(send_buffer));
                        // sprintf(send_buffer,"end of file");
                         cacheItem(t3,temp); //MO
                         //send(sd,send_buffer,strlen(send_buffer),0);
@@ -294,7 +294,7 @@ while(TRUE)
                             while(fread(send_buffer,sizeof(send_buffer),1,fp))
                                 send(sd,send_buffer,sizeof(send_buffer),0);
 
-                            bzero((char*)send_buffer,500);
+                            bzero((char*)send_buffer,sizeof(send_buffer));
                             fclose(fp);  
 
                 }    
