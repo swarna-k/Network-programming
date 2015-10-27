@@ -60,7 +60,8 @@ int main(int argc, char *argv[])
 	strcpy(url_buff,argv[3]);
 
 	
-	sprintf(message_buff, "GET HTTP/1.0 %s",url_buff);
+	sprintf(message_buff, "GET HTTP/1.0 %s\n",url_buff);
+	printf("%s\n",message_buff);
 	printf("Sending URL %s to the server.\n",url_buff);
 	n = write(sockfd,message_buff,280);
 
@@ -69,20 +70,26 @@ int main(int argc, char *argv[])
 		perror("Error writing request to server\n");
 		exit(0);
 	}
-
+	
 	f1=fopen("recvfile.txt","w");
 	readbytes = recv(sockfd, recv_buff, 250, 0);
 	fprintf(f1,"%s",recv_buff);
 	printf("Pritning data to revcfile.txt\n");
-
-	while(readbytes>=250)
+	
+	while((readbytes>=250)&&(strcmp(recv_buff,"end of file")!=0))
 	{
+
+		printf("enetered qhile\n");
 		bzero(recv_buff,250);
 		readbytes = recv(sockfd, recv_buff, 250, 0);
+				printf("%d",readbytes);
+		puts("Read bytes");
 		fprintf(f1,"%s",recv_buff);
+		puts("finished loop");
 	}
 
 	printf("Received all the data. Closing connection.\n");
 
 	fclose(f1);
+	
 }

@@ -288,6 +288,7 @@ while(TRUE)
                 else{
                     
                             FILE *fp;
+							puts("Getting item from Cache\n"); 
                             getCachedItem(filename,index);
                             
                             fp = fopen(filename,"r");
@@ -295,6 +296,9 @@ while(TRUE)
                                 send(sd,send_buffer,sizeof(send_buffer),0);
 
                             bzero((char*)send_buffer,sizeof(send_buffer));
+							strcpy(send_buffer, "end of file");
+							send(sd,send_buffer,sizeof(send_buffer),0);
+							bzero((char*)send_buffer,sizeof(send_buffer));
                             fclose(fp);  
 
                 }    
