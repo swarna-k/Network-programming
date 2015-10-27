@@ -14,7 +14,7 @@ typedef struct CacheNode{
 	time_t expires;
 }CacheNode;
 
-extern CacheNode Cache[10];
+void initilizeCache();
 
 //Stores item in cache
 //Call after saving temporary file tempfile.txt

@@ -5,7 +5,16 @@
 #include <string.h>
 #include <unistd.h>
 
-CacheNode Cache[10] = {[0 ...9 ]={"Empty","Empty",0,0,0,0}};
+
+static CacheNode Cache[10];
+ 
+void initilizeCache(){
+	int i;
+	CacheNode defaultNode = {NULL, NULL,0,0,0,0};
+	for(i = 0; i < 10; i++){
+		Cache[i] = defaultNode;
+	}
+}
 void cacheItem(char* domainName, char* page){
 	FILE * tempfile; 
 	char * line = NULL;
@@ -15,10 +24,13 @@ void cacheItem(char* domainName, char* page){
 	struct tm tm;
 	int evictIndex;
 	struct CacheNode newnode;
+
 	
 	strcpy(newnode.domainName, domainName);
-	strcpy(newnode.page, page);
 	
+	if(page != NULL){
+	strcpy(newnode.page, page);
+	}
 	
 	
 	
@@ -102,13 +114,34 @@ puts("New Item Successfully Cached");
 int checkCache(char* domainName, char* page){
 int i;
 int cacheIndex = -1;
-for(i = 0; i<10; i++){ //sizeof(Cache) = 10 (Doesn't work for static variable)
-printf("Argument = %s\n", domainName);
-printf("Cache [i] = %s\n", Cache[i].domainName);
+time_t current;
 
-if(strcmp(domainName,Cache[i].domainName) == 0 && strcmp(page, Cache[i].page) == 0){
-	cacheIndex = i; 
+if(domainName == NULL) return -1; 
+
+for(i = 0; i<10; i++){ //sizeof(Cache) = 10 (Doesn't work for static variable)
+
+	
+
+	if(Cache[i].domainName != NULL && strcmp(domainName, Cache[i].domainName) == 0){
+		
+		if((page != NULL && Cache[i].page != NULL && strcmp(page, Cache[i].page) == 0) || (page == NULL && Cache[i].page == NULL)){
+		
+		cacheIndex = i; 
+		time(&current);
+		printf("expires flag = %d\n", Cache[i].expire_flag);
+		printf("Expires at %d \n", Cache[i].expires);
+		if((int)Cache[i].expire_flag == 0){
+			puts("Expire flag not set");
+			return cacheIndex;
+		}
+		else if (difftime(current,Cache[i].expires) < 0){
+			Cache[i].lastAccessed = 0; //Ensures it will be evicted soon
+			return -1; //Info is stale
+		}
+	}
+	
 }
+	
 	
 }
 printf("%d\n",cacheIndex); 
@@ -128,6 +161,8 @@ struct tm tm;
 char domain[255] = "DomainName";
 char page[255] = "PageName";
 char filename[255];
+
+initilizeCache();
 cacheItem(domain,page);
 int y =checkCache(domain, page);
 if ( y >= 0){

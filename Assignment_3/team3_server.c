@@ -37,7 +37,7 @@ int main(int argc , char *argv[])
 
 
     char recv_buffer[1024];
-
+	initilizeCache(); 
     
     max_clients=30;
     //set of socket descriptors
