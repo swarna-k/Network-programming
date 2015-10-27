@@ -10,7 +10,7 @@ static CacheNode Cache[10];
  
 void initilizeCache(){
 	int i;
-	CacheNode defaultNode = {NULL, NULL,0,0,0,0};
+	CacheNode defaultNode = {0};
 	for(i = 0; i < 10; i++){
 		Cache[i] = defaultNode;
 	}
@@ -122,10 +122,8 @@ for(i = 0; i<10; i++){ //sizeof(Cache) = 10 (Doesn't work for static variable)
 
 	
 
-	if(Cache[i].domainName != NULL && strcmp(domainName, Cache[i].domainName) == 0){
-		
-		if((page != NULL && Cache[i].page != NULL && strcmp(page, Cache[i].page) == 0) || (page == NULL && Cache[i].page == NULL)){
-		
+	if(strcmp(domainName, Cache[i].domainName) == 0){
+		if((page != NULL && strcmp(page, Cache[i].page) == 0) || (page == NULL && Cache[i].page[0] == 0)){
 		cacheIndex = i; 
 		time(&current);
 		printf("expires flag = %d\n", Cache[i].expire_flag);
@@ -136,6 +134,7 @@ for(i = 0; i<10; i++){ //sizeof(Cache) = 10 (Doesn't work for static variable)
 		}
 		else if (difftime(current,Cache[i].expires) < 0){
 			Cache[i].lastAccessed = 0; //Ensures it will be evicted soon
+			puts("Cached information is Stale");
 			return -1; //Info is stale
 		}
 	}
@@ -163,8 +162,8 @@ char page[255] = "PageName";
 char filename[255];
 
 initilizeCache();
-cacheItem(domain,page);
-int y =checkCache(domain, page);
+cacheItem(domain,NULL);
+int y =checkCache(domain, NULL);
 if ( y >= 0){
 getCachedItem(filename, y);
 printf("The file is cached at %s\n", filename);

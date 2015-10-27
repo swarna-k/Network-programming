@@ -6,8 +6,8 @@ default: all
 	
 all: server client
 	
-client.o: client.c
-	$(CC) $(CFLAGS) -c client.c -o client.o
+client.o: http_client.c
+	$(CC) $(CFLAGS) -c http_client.c -o client.o
   
 server.o: team3_server.c 
 	$(CC) $(CFLAGS) -c team3_server.c -o server.o
