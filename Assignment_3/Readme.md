@@ -14,6 +14,7 @@ The http client :
     Receives the document and saves it in a file
     Logs messages during the entire process
 
+#Make
 To run the code:
   make - to compile all the files
   make server - to compile only the server
