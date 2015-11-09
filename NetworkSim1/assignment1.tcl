@@ -9,6 +9,12 @@ if { $argc != 2 } {
  set casenum [lindex $argv 1]
 }
 
+set filename "ratios_${tcptype}_${casenum}.txt"
+puts "Opening $filename"
+set fileId [open $filename w]
+puts $fileId "Time\tThroughput1\tThroughput2\tRatio"
+set sum1 0
+set sum2 0
 
 #Create a simulator object
 set ns [new Simulator]
@@ -19,13 +25,34 @@ $ns namtrace-all $nf
 
 #Define a 'finish' procedure
 proc finish {} {
-        global ns nf
+        global ns nf fileId
         $ns flush-trace
 	#Close the trace file
         close $nf
+	#Close output file 
+		close $fileId
 	#Execute nam on the trace file
         exec nam out.nam &
         exit 0
+}
+
+proc record {} {
+	global tcpsink0 tcpsink1 fileId sum1 sum2
+	set ns [Simulator instance]
+	set time .5
+	set now [$ns now]
+	set bw0 [$tcpsink0 set bytes_]
+	set bw1 [$tcpsink1 set bytes_]
+	set sum1 [expr $sum1+$bw0/$time*8/1000000]
+	set sum2 [expr $sum2+$bw1/$time*8/1000000]
+	if { $sum2 != 0 } {
+		set ratio [expr double($sum1)/$sum2]
+		} else {
+			set ratio 0
+		}
+	
+	puts $fileId "$now\t[expr $sum1]\t[expr $sum2]\t[expr $ratio]"
+	$ns at [expr $now+$time] "record"
 }
 
 proc case1 {} {
@@ -120,12 +147,13 @@ $ns connect $tcp1 $tcpsink1
 #$R1 node-config -wiredRouting ON
 #$R2 node-config -wiredRouting ON
 
-$ns at 0.5 "$ftp0 start"
-$ns at 4.5 "$ftp0 stop"
-$ns at 0.5 "$ftp1 start"
-$ns at 4.5 "$ftp1 stop"
+$ns at 100.0 "record"
+$ns at 0.0 "$ftp0 start"
+$ns at 400.0 "$ftp0 stop"
+$ns at 0.0 "$ftp1 start"
+$ns at 400.0 "$ftp1 stop"
 #Call the finish procedure after 5 seconds of simulation time
-$ns at 5.0 "finish"
+$ns at 400.0 "finish"
 
 #Run the simulation
 $ns run
