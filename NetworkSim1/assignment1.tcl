@@ -1,7 +1,7 @@
 
 if { $argc != 2 } {
     puts "The TCP type and case number must be entered"
-    puts "For example, Vegas 2"
+    puts "For example, Sack1 2"
     puts "Please try again."
 	exit 0
 } else {
@@ -43,8 +43,8 @@ proc record {} {
 	set now [$ns now]
 	set bw0 [$tcpsink0 set bytes_]
 	set bw1 [$tcpsink1 set bytes_]
-	set sum1 [expr $sum1+$bw0/$time*8/1000000]
-	set sum2 [expr $sum2+$bw1/$time*8/1000000]
+	set sum1 [expr $bw0/$time*8/1000000]
+	set sum2 [expr $bw1/$time*8/1000000]
 	if { $sum2 != 0 } {
 		set ratio [expr double($sum1)/$sum2]
 		} else {
@@ -52,32 +52,39 @@ proc record {} {
 		}
 	
 	puts $fileId "$now\t[expr $sum1]\t[expr $sum2]\t[expr $ratio]"
+	zerobytes
 	$ns at [expr $now+$time] "record"
+}
+
+proc zerobytes {} {
+	global tcpsink0 tcpsink1
+	$tcpsink0 set bytes_ 0 
+	$tcpsink1 set bytes_ 0
 }
 
 proc case1 {} {
 	puts "Selected Case 1"
 	global ns src1 src2 rcv1 rcv2 R1 R2
-	$ns duplex-link $src1 $R1 10Mb 5ms SFQ
-	$ns duplex-link $src2 $R1 10Mb 12.5ms SFQ 
-	$ns duplex-link $rcv1 $R2 10Mb 5ms SFQ
-	$ns duplex-link $rcv2 $R2 10Mb 12.5ms SFQ
+	$ns duplex-link $src1 $R1 10Mb 5ms DropTail
+	$ns duplex-link $src2 $R1 10Mb 12.5ms DropTail 
+	$ns duplex-link $rcv1 $R2 10Mb 5ms DropTail
+	$ns duplex-link $rcv2 $R2 10Mb 12.5ms DropTail
 }
 proc case2 {} {
 	puts "Selected Case 2"
 	global ns src1 src2 rcv1 rcv2 R1 R2
-	$ns duplex-link $src1 $R1 10Mb 5ms SFQ
-	$ns duplex-link $src2 $R1 10Mb 20ms SFQ 
-	$ns duplex-link $rcv1 $R2 10Mb 5ms SFQ
-	$ns duplex-link $rcv2 $R2 10Mb 20ms SFQ
+	$ns duplex-link $src1 $R1 10Mb 5ms DropTail
+	$ns duplex-link $src2 $R1 10Mb 20ms DropTail 
+	$ns duplex-link $rcv1 $R2 10Mb 5ms DropTail
+	$ns duplex-link $rcv2 $R2 10Mb 20ms DropTail
 }
 proc case3 {} {
 	puts "Selected Case 3"
 	global ns src1 src2 rcv1 rcv2 R1 R2
-	$ns duplex-link $src1 $R1 10Mb 5ms SFQ
-	$ns duplex-link $src2 $R1 10Mb 27.5ms SFQ 
-	$ns duplex-link $rcv1 $R2 10Mb 5ms SFQ
-	$ns duplex-link $rcv2 $R2 10Mb 27.5ms SFQ
+	$ns duplex-link $src1 $R1 10Mb 5ms DropTail
+	$ns duplex-link $src2 $R1 10Mb 27.5ms DropTail 
+	$ns duplex-link $rcv1 $R2 10Mb 5ms DropTail
+	$ns duplex-link $rcv2 $R2 10Mb 27.5ms DropTail
 }
 
 #Create two nodes
@@ -104,7 +111,7 @@ switch -exact $casenum {
 }
 
 #Create a duplex link between the Routers
-$ns duplex-link $R1 $R2 1Mb 5ms SFQ
+$ns duplex-link $R1 $R2 1Mb 5ms DropTail
 
 $ns duplex-link-op $src1 $R1 orient right-down
 $ns duplex-link-op $src2 $R1 orient right-up
@@ -146,7 +153,7 @@ $ns connect $tcp1 $tcpsink1
 
 #$R1 node-config -wiredRouting ON
 #$R2 node-config -wiredRouting ON
-
+$ns at 99.5 "zerobytes"
 $ns at 100.0 "record"
 $ns at 0.0 "$ftp0 start"
 $ns at 400.0 "$ftp0 stop"
