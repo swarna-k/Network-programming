@@ -44,7 +44,7 @@ proc finish {} {
 }
 
 proc record {} {
-	global tcpsink0 tcpsink1 udpsink2 fileId sum1 sum2 sum3
+	global tcpsink0 tcpsink1 udpsink2 fileId sum1 sum2 sum3 scenario
 	set ns [Simulator instance]
 	set time .5
 	set now [$ns now]
