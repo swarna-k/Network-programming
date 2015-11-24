@@ -32,6 +32,7 @@ set ns [new Simulator]
 set nf [open out.nam w]
 $ns namtrace-all $nf
 
+
 #Define a 'finish' procedure
 proc finish {} {
         global ns nf fileId
@@ -136,7 +137,9 @@ if {$scenario == 2} {
 }
 
 $ns queue-limit $R1 $R2 20
-
+set qfile [open qm_$queue$scenario.out w]
+set qmon [$ns monitor-queue $R1 $R2 $qfile 1]
+[$ns link $R1 $R2] queue-sample-timeout
 
 $ns at 29.0 "zerobytes"
 $ns at 30.0 "record"
