@@ -46,17 +46,16 @@ proc finish {} {
 }
 
 proc record {} {
-	global tcpsink0 tcpsink1 udpsink0 fileId 
-	set ns [Simulator instance]
-	set time .5
+	global ns tcpsink0 tcpsink1 udpsink0 fileId
+	set time 1
 	set now [$ns now]
 	set bw0 [$tcpsink0 set bytes_]
 	set bw1 [$tcpsink1 set bytes_]
 	set bw2 [$udpsink0 set bytes_]
 	
-	set tp0 [expr $bw0/$time*8/1000000]
-	set tp1 [expr $bw1/$time*8/1000000]
-	set tp2 [expr $bw2/$time*8/1000000]
+	set tp0 [expr double($bw0)/$time*8/1000000]
+	set tp1 [expr double($bw1)/$time*8/1000000]
+	set tp2 [expr double($bw2)/$time*8/1000000]
 	
 	puts $fileId "$now\t[expr $tp0]\t[expr $tp1]\t[expr $tp2]"
 	zerobytes
@@ -90,6 +89,8 @@ proc scenario2 {} {
 	$ns connect $udp0 $udpsink0
 	
 	$ns at 0.0 "$cbr0 start"
+	$ns at 180.0 "$cbr0 stop"
+	
 }
 
 #Create two nodes
@@ -134,8 +135,10 @@ if {$scenario == 2} {
 	scenario2
 }
 
+$ns queue-limit $R1 $R2 20
 
-$ns at 29.5 "zerobytes"
+
+$ns at 29.0 "zerobytes"
 $ns at 30.0 "record"
 $ns at 0.0 "$ftp0 start"
 $ns at 180.0 "$ftp0 stop"
